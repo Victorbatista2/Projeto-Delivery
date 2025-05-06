@@ -193,17 +193,6 @@ const LoginRegister = () => {
             />
           </div>
         )}
-        {state === "Sign Up" && (
-          <div className="input">
-            <input
-              type="tel"
-              name="phoneNumber"
-              placeholder="Número de telefone"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-            />
-          </div>
-        )}
         <div className="input">
           <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} />
         </div>
