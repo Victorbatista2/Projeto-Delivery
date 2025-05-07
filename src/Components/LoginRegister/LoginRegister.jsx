@@ -1,255 +1,292 @@
-import { useState, useEffect } from "react"
-import "./LoginRegister.css"
+import { useState, useEffect } from "react";
+import "./LoginRegister.css";
 
 const LoginRegister = () => {
-  const [state, setState] = useState("Login")
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-  })
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [, setUser] = useState(null)
+    const [state, setState] = useState("Login");
+    const [formData, setFormData] = useState({
+        nome: "",
+        sobrenome: "",
+        email: "",
+        senha: "",
+    });
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [user, setUser] = useState(null);
 
-  // Initialize Google API
-  useEffect(() => {
-    // Load the Google SDK
-    const loadGoogleScript = () => {
-      const script = document.createElement("script")
-      script.src = "https://accounts.google.com/gsi/client"
-      script.async = true
-      script.defer = true
-      document.body.appendChild(script)
+    useEffect(() => {
+        const loadGoogleScript = () => {
+            const script = document.createElement("script");
+            script.src = "https://accounts.google.com/gsi/client";
+            script.async = true;
+            script.defer = true;
+            document.body.appendChild(script);
 
-      script.onload = () => {
-        // Initialize Google Sign-In
-        window.google?.accounts.id.initialize({
-          client_id: "474311907571-g0d6vjrjgatf3d0b7do9fq6cm9u5par1.apps.googleusercontent.com", // Replace with your actual Google Client ID
-          callback: handleGoogleResponse,
-        })
-      }
-    }
+            script.onload = () => {
+                window.google?.accounts.id.initialize({
+                    client_id: "474311907571-g0d6vjrjgatf3d0b7do9fq6cm9u5par1.apps.googleusercontent.com",
+                    callback: handleGoogleResponse,
+                });
+            };
+        };
 
-    loadGoogleScript()
-    loadFacebookSDK()
-  }, [])
+        loadGoogleScript();
+        loadFacebookSDK();
+    }, []);
 
-  // Load Facebook SDK
-  const loadFacebookSDK = () => {
-    window.fbAsyncInit = () => {
-      window.FB.init({
-        appId: "2406762519701766", // Replace with your actual Facebook App ID
-        cookie: true,
-        xfbml: true,
-        version: "v17.0",
-      })
-    }
+    const loadFacebookSDK = () => {
+        window.fbAsyncInit = () => {
+            window.FB.init({
+                appId: "2406762519701766",
+                cookie: true,
+                xfbml: true,
+                version: "v17.0",
+            });
+        };
 
-    // Load the SDK asynchronously
-    ;((d, s, id) => {
-      var js,
-        fjs = d.getElementsByTagName(s)[0]
-      if (d.getElementById(id)) return
-      js = d.createElement(s)
-      js.id = id
-      js.src = "https://connect.facebook.net/en_US/sdk.js"
-      fjs.parentNode.insertBefore(js, fjs)
-    })(document, "script", "facebook-jssdk")
-  }
+        ((d, s, id) => {
+            let js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        })(document, "script", "facebook-jssdk");
+    };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
-  }
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("Usúario ou senha incorreto")
-    setLoading(true)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
 
-    try {
-      // Call your own API here to handle login/register with email/password
-      const endpoint = state === "Sign Up" ? "/api/register" : "/api/login"
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      })
+        try {
+            const endpoint = state === "Sign Up" 
+                ? "http://localhost:3001/api/register" 
+                : "http://localhost:3001/api/login";
+            
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    nome: formData.nome,
+                    sobrenome: formData.sobrenome,
+                    email: formData.email,
+                    senha: formData.senha
+                }),
+            });
 
-      const data = await response.json()
+            const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Authentication failed")
-      }
+            if (!response.ok) {
+                throw new Error(data.message || "Operação falhou");
+            }
 
-      setUser(data.user)
-      // Handle successful authentication (e.g., store token, redirect, etc.)
-      console.log("Authentication successful", data)
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleGoogleLogin = () => {
-    window.google?.accounts.id.prompt()
-  }
-
-  const handleGoogleResponse = async (response) => {
-    setLoading(true)
-    
-    try {
-      // Send the ID token to your backend
-      const result = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token: response.credential }),
-      })
-
-      const data = await result.json()
-      if (!result.ok) {
-        throw new Error(data.message || "Google authentication failed")
-      }
-
-      setUser(data.user)
-      console.log("Google sign-in successful", data)
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleFacebookLogin = () => {
-    window.FB.login(
-      (response) => {
-        if (response.authResponse) {
-          handleFacebookResponse(response)
-        } else {
-          setError("Facebook login was cancelled or failed")
+            setUser(data.usuario || data);
+            console.log("Sucesso:", data);
+            
+            if (state === "Sign Up") {
+                alert("Cadastro realizado com sucesso!");
+                setState("Login");
+            } else {
+                // Redirecionar para a página após login
+                // window.location.href = "/dashboard";
+            }
+        } catch (error) {
+            setError(error.message || "Ocorreu um erro. Tente novamente.");
+            console.error("Erro:", error);
+        } finally {
+            setLoading(false);
         }
-      },
-      { scope: "email,public_profile" },
-    )
-  }
+    };
 
-  const handleFacebookResponse = async (response) => {
-    setLoading(true)
-    try {
-      // Get user information
-      window.FB.api("/me", { fields: "email,name" }, async (userInfo) => {
-        // Send the access token and user info to your backend
-        const result = await fetch("/api/auth/facebook", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            accessToken: response.authResponse.accessToken,
-            userID: response.authResponse.userID,
-            email: userInfo.email,
-            name: userInfo.name,
-          }),
-        })
+    const handleGoogleLogin = () => {
+        window.google?.accounts.id.prompt();
+    };
 
-        const data = await result.json()
-        if (!result.ok) {
-          throw new Error(data.message || "Facebook authentication failed")
+    const handleGoogleResponse = async (response) => {
+        setLoading(true);
+        try {
+            const result = await fetch("/api/auth/google", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: response.credential }),
+            });
+
+            const data = await result.json();
+            if (!result.ok) throw new Error(data.message || "Falha no login com Google");
+            
+            setUser(data.user);
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setLoading(false);
         }
+    };
 
-        setUser(data.user)
-        console.log("Facebook sign-in successful", data)
-      })
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
+    const handleFacebookLogin = () => {
+        window.FB.login(
+            (response) => {
+                if (response.authResponse) {
+                    handleFacebookResponse(response);
+                } else {
+                    setError("Login com Facebook cancelado");
+                }
+            },
+            { scope: "email,public_profile" }
+        );
+    };
 
-  return (
-    <div className="container">
-      <div className="header">
-        <div className="text">{state}</div>
-        <div className="underline"></div>
-      </div>
-      <div className="inputs">
-        {state === "Sign Up" && (
-          <div className="input">
-            <input
-              type="text"
-              name="username"
-              placeholder="Username"
-              value={formData.username}
-              onChange={handleChange}
-            />
-          </div>
-        )}
-        {state === "Sign Up" && (
-          <div className="input">
-            <input
-              type="tel"
-              name="phoneNumber"
-              placeholder="Número de telefone"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-            />
-          </div>
-        )}
-        <div className="input">
-          <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} />
-        </div>
-        <div className="input">
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-      {state === "Login" && (
-        <div className="forgot-password">
-          Forgot Password? <span>Click Here!</span>
-        </div>
-      )}
-      {error && <div className="error-message">{error}</div>}
-      <div className="submit-container">
-        <div className={state === "Login" ? "submit gray" : "submit"} onClick={() => setState("Sign Up")}>
-          Sign Up
-        </div>
-        <div className={state === "Sign Up" ? "submit gray" : "submit"} onClick={() => setState("Login")}>
-          Login
-        </div>
-      </div>
-      <button className="submit-button" onClick={handleSubmit} disabled={loading}>
-        {loading ? "" : state}
-      </button>
+    const handleFacebookResponse = async (response) => {
+        setLoading(true);
+        try {
+            window.FB.api("/me", { fields: "email,name" }, async (userInfo) => {
+                const result = await fetch("/api/auth/facebook", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        accessToken: response.authResponse.accessToken,
+                        userID: response.authResponse.userID,
+                        email: userInfo.email,
+                        name: userInfo.name,
+                    }),
+                });
 
-      <div className="social-login">
-        <div className="social-text">Or sign in with</div>
-        <div className="social-icons">
-          <button className="social-button google" onClick={handleGoogleLogin} disabled={loading}>
-            <div className="social-icon google-icon"></div>
-            Google
-          </button>
-          <button className="social-button facebook" onClick={handleFacebookLogin} disabled={loading}>
-            <div className="social-icon facebook-icon"></div>
-            Facebook
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+                const data = await result.json();
+                if (!result.ok) throw new Error(data.message || "Falha no login com Facebook");
+                
+                setUser(data.user);
+            });
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-export default LoginRegister
+    return (
+        <div className="container">
+            <div className="header">
+                <div className="text">{state}</div>
+                <div className="underline"></div>
+            </div>
+            
+            <form onSubmit={handleSubmit}>
+                <div className="inputs">
+                    {state === "Sign Up" && (
+                        <>
+                            <div className="input">
+                                <input
+                                    type="text"
+                                    name="nome"
+                                    placeholder="Nome"
+                                    value={formData.nome}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div className="input">
+                                <input
+                                    type="text"
+                                    name="sobrenome"
+                                    placeholder="Sobrenome"
+                                    value={formData.sobrenome}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        </>
+                    )}
+                    <div className="input">
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="input">
+                        <input
+                            type="password"
+                            name="senha"
+                            placeholder="Senha"
+                            value={formData.senha}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                </div>
+                
+                {state === "Login" && (
+                    <div className="forgot-password">
+                        Esqueceu a senha? <span>Clique aqui!</span>
+                    </div>
+                )}
+                
+                {error && <div className="error-message">{error}</div>}
+                
+                <div className="submit-container">
+                    <button
+                        type="button"
+                        className={state === "Login" ? "submit gray" : "submit"}
+                        onClick={() => {
+                            setState("Sign Up");
+                            setError("");
+                        }}
+                    >
+                        Cadastrar
+                    </button>
+                    <button
+                        type="button"
+                        className={state === "Sign Up" ? "submit gray" : "submit"}
+                        onClick={() => {
+                            setState("Login");
+                            setError("");
+                        }}
+                    >
+                        Login
+                    </button>
+                </div>
+                
+                <button 
+                    type="submit" 
+                    className="submit-button" 
+                    disabled={loading}
+                >
+                    {loading ? "Processando..." : state === "Login" ? "Entrar" : "Cadastrar"}
+                </button>
+            </form>
+            
+            <div className="social-login">
+                <div className="social-text">Ou entre com</div>
+                <div className="social-icons">
+                    <button 
+                        className="social-button google" 
+                        onClick={handleGoogleLogin} 
+                        disabled={loading}
+                    >
+                        <div className="social-icon google-icon"></div>
+                        Google
+                    </button>
+                    <button 
+                        className="social-button facebook" 
+                        onClick={handleFacebookLogin} 
+                        disabled={loading}
+                    >
+                        <div className="social-icon facebook-icon"></div>
+                        Facebook
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default LoginRegister;

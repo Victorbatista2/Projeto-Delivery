@@ -1,52 +1,56 @@
-async function connect(){
+require('dotenv').config();
 
-    if(global.connection)
-        return global.connection.connect();
+const { Pool } = require("pg");
+const pool = new Pool({
+    connectionString: 'postgresql://postgres:1234@localhost:5432/Projeto_Ifood',
+});
 
-    const { Pool } = require("pg");
-    const pool = new Pool({
-        connectionString: process.env.CONNECTION_STRING,
-    })
+async function connect() {
+    if(global.connection) return global.connection.connect();
 
-    const client = await pool.connect();
-    console.log("Criou pool de coneao")
+    try {
+        const client = await pool.connect();
+        console.log("Conectado ao banco de dados");
 
-    const res = await client.query("select now()")
-    console.log(res.rows[0]);
+        const res = await client.query("SELECT NOW()");
+        console.log(res.rows[0]);
 
-    global.connection = pool;
-    return pool.connect();
+        global.connection = pool;
+        return pool.connect();
+    } catch (err) {
+        console.error("Erro ao conectar ao banco de dados:", err);
+        throw err;
+    }
 }
 
-connect();
-
-async function selectUsers(){
+async function selectUsers() {
     const client = await connect();
     const res = await client.query("SELECT * FROM Usuario");
     return res.rows;
 }
 
-async function selectUser(id){
+async function selectUser(id) {
     const client = await connect();
-    const res = await client.query("SELECT * FROM Usuario WHERE ID=$1", [id]);
-    return res.rows;
+    const res = await client.query("SELECT * FROM Usuario WHERE id=$1", [id]);
+    return res.rows[0];
 }
 
-async function insertUsuarios(Usuario){
+async function insertUsuarios(Usuario) {
     const client = await connect();
-    const sql = "INSERT INTO Usuario(Nome,Sobrenome,Email,Senha,ativo) VALUES ($1, $2, $3, $4, $5)"
+    const sql = "INSERT INTO Usuario(Nome, Sobrenome, Email, Senha, ativo) VALUES ($1, $2, $3, $4, $5) RETURNING *";
     const values = [Usuario.nome, Usuario.sobrenome, Usuario.email, Usuario.senha, Usuario.ativo];
-    await client.query(sql, values);
+    const result = await client.query(sql, values);
+    return result.rows[0];
 }
 
-async function updateUsuarios(id, Usuario){
+async function updateUsuarios(id, Usuario) {
     const client = await connect();
     const sql = "UPDATE Usuario SET Nome=$1, Sobrenome=$2, Email=$3, Senha=$4, ativo=$5 WHERE id=$6";
     const values = [Usuario.nome, Usuario.sobrenome, Usuario.email, Usuario.senha, Usuario.ativo, id];
     await client.query(sql, values);
 }
 
-async function deleteUsuario(id,){
+async function deleteUsuario(id) {
     const client = await connect();
     const sql = "DELETE FROM Usuario WHERE id=$1";
     const values = [id];
@@ -58,5 +62,5 @@ module.exports = {
     selectUser,
     insertUsuarios,
     updateUsuarios,
-    deleteUsuario
+    deleteUsuario,
 };
