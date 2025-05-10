@@ -1,6 +1,4 @@
-
 "use client"
-
 import { useState, useEffect } from "react"
 import LoginRegister from "./Components/LoginRegister/LoginRegister"
 import HomePage from "./Components/HomePage/HomePage"
@@ -8,29 +6,34 @@ import HomePage from "./Components/HomePage/HomePage"
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
+  const [isLoading, setIsLoading] = useState(true) // Adicionamos um estado de loading
 
-  // Check if user is already logged in (e.g., from localStorage or session)
   useEffect(() => {
+    // Verifica se há um usuário salvo, mas não faz login automaticamente
     const storedUser = localStorage.getItem("user")
     if (storedUser) {
       setUser(JSON.parse(storedUser))
-      setIsAuthenticated(true)
+      // Não definimos isAuthenticated como true aqui
     }
+    setIsLoading(false)
   }, [])
 
-  // Handle successful login
   const handleLoginSuccess = (userData) => {
     setUser(userData)
     setIsAuthenticated(true)
-    // Store user data for persistence
     localStorage.setItem("user", JSON.stringify(userData))
   }
 
-  // Handle logout
   const handleLogout = () => {
     setUser(null)
     setIsAuthenticated(false)
     localStorage.removeItem("user")
+    // Adicione isso se estiver usando tokens:
+    localStorage.removeItem("token")
+  }
+
+  if (isLoading) {
+    return <div>Carregando...</div> // Ou um spinner de loading
   }
 
   return (
@@ -45,4 +48,3 @@ function App() {
 }
 
 export default App
-

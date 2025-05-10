@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./LoginRegister.css";
 
-const LoginRegister = () => {
+const LoginRegister = ({ onLoginSuccess }) => {
     const [state, setState] = useState("Login");
     const [formData, setFormData] = useState({
         nome: "",
@@ -87,15 +87,14 @@ const LoginRegister = () => {
                 throw new Error(data.message || "Operação falhou");
             }
 
-            setUser(data.usuario || data);
-            console.log("Sucesso:", data);
-            
-            if (state === "Sign Up") {
+            // Atualização importante: Chamar onLoginSuccess para login
+            if (state === "Login") {
+                onLoginSuccess(data.usuario || data);
+            } else {
+                // Para cadastro, apenas mostrar mensagem
+                setUser(data.usuario || data);
                 alert("Cadastro realizado com sucesso!");
                 setState("Login");
-            } else {
-                // Redirecionar para a página após login
-                // window.location.href = "/dashboard";
             }
         } catch (error) {
             setError(error.message || "Ocorreu um erro. Tente novamente.");
@@ -121,7 +120,7 @@ const LoginRegister = () => {
             const data = await result.json();
             if (!result.ok) throw new Error(data.message || "Falha no login com Google");
             
-            setUser(data.user);
+            onLoginSuccess(data.user); // Corrigido para chamar onLoginSuccess
         } catch (error) {
             setError(error.message);
         } finally {
@@ -160,7 +159,7 @@ const LoginRegister = () => {
                 const data = await result.json();
                 if (!result.ok) throw new Error(data.message || "Falha no login com Facebook");
                 
-                setUser(data.user);
+                onLoginSuccess(data.user); // Corrigido para chamar onLoginSuccess
             });
         } catch (error) {
             setError(error.message);
