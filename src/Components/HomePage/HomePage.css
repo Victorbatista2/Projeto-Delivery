@@ -1,1414 +1,1424 @@
 /* Reset and Base Styles */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  body {
-    font-family: "Nunito", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    background-color: #f7f7f7;
-  }
-  
-  .home-container {
-    width: 100%;
-    min-height: 100vh;
-  }
-  
-  /* Header Styles */
-  .header {
-    background-color: #ffffff;
-    height: 80px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-  
-  .header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 1200px;
-    padding: 0 16px;
-    height: 100%;
-  }
-  
-  /* Logo */
-  .logo {
-    display: flex;
-    align-items: center;
-  }
-  
-  .ifood-logo {
-    width: 80px;
-    height: 24px;
-  }
-  
-  /* Navigation Menu */
-  .nav-menu {
-    display: flex;
-    align-items: center;
-    margin-left: 20px;
-  }
-  
-  .nav-list {
-    display: flex;
-    list-style: none;
-  }
-  
-  .nav-item {
-    margin: 0 8px;
-    position: relative;
-  }
-  
-  .nav-item a {
-    color: #717171;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 8px 4px;
-    transition: color 0.3s ease;
-  }
-  
-  .nav-item:hover a {
-    color: #ea1d2c;
-  }
-  
-  .nav-item.active a {
-    color: #ea1d2c;
-    font-weight: 600;
-  }
-  
-  .nav-item.active::after {
-    content: "";
-    position: absolute;
-    bottom: -28px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background-color: #ea1d2c;
-  }
-  
-  /* Adicionar estilos para os botões de navegação */
-  .nav-link {
-    background: none;
-    border: none;
-    color: #717171;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 8px 4px;
-    transition: color 0.3s ease;
-    cursor: pointer;
-    text-align: left;
-  }
-  
-  .nav-item:hover .nav-link {
-    color: #ea1d2c;
-  }
-  
-  .nav-item.active .nav-link {
-    color: #ea1d2c;
-    font-weight: 600;
-  }
-  
-  .logo-button {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-  }
-  
-  /* Search Bar */
-  .search-container {
-    flex: 1;
-    max-width: 400px;
-    margin: 0 20px;
-    position: relative;
-  }
-  
-  .search-input {
-    display: flex;
-    align-items: center;
-    background-color: #f7f7f7;
-    border-radius: 4px;
-    padding: 0 16px;
-    height: 48px;
-    width: 100%;
-  }
-  
-  .search-icon {
-    color: #a6a6a6;
-    margin-right: 8px;
-  }
-  
-  .search-input input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-size: 14px;
-    color: #3e3e3e;
-    outline: none;
-    width: 100%;
-  }
-  
-  .search-input input::placeholder {
-    color: #a6a6a6;
-  }
-  
-  .clear-search {
-    background: none;
-    border: none;
-    color: #a6a6a6;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
-  }
-  
-  /* Search Results */
-  .search-results {
-    position: absolute;
-    top: 55px;
-    left: 0;
-    width: 100%;
-    background-color: white;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    max-height: 500px;
-    overflow-y: auto;
-    z-index: 1000;
-  }
-  
-  .search-results-section {
-    padding: 16px;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  
-  .search-results-section h3 {
-    font-size: 14px;
-    color: #717171;
-    margin-bottom: 12px;
-    font-weight: 600;
-  }
-  
-  .search-results-section ul {
-    list-style: none;
-  }
-  
-  .restaurant-item,
-  .product-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .restaurant-item:hover,
-  .product-item:hover {
-    background-color: #f9f9f9;
-  }
-  
-  .restaurant-image,
-  .product-image {
-    width: 60px;
-    height: 60px;
-    margin-right: 12px;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  
-  .restaurant-image img,
-  .product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .restaurant-info,
-  .product-info {
-    flex: 1;
-  }
-  
-  .restaurant-info h4,
-  .product-info h4 {
-    font-size: 14px;
-    color: #3e3e3e;
-    margin-bottom: 4px;
-  }
-  
-  .restaurant-details {
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-    color: #717171;
-  }
-  
-  .restaurant-category,
-  .restaurant-rating,
-  .restaurant-delivery-time {
-    margin-right: 8px;
-  }
-  
-  .restaurant-rating {
-    color: #e7a74e;
-  }
-  
-  .restaurant-delivery-fee,
-  .product-price {
-    font-size: 12px;
-    color: #3e3e3e;
-    font-weight: 600;
-  }
-  
-  .product-restaurant {
-    font-size: 12px;
-    color: #717171;
-    margin-bottom: 4px;
-  }
-  
-  .add-to-cart-button {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background-color: #ea1d2c;
-    color: white;
-    border: none;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    margin-left: 12px;
-  }
-  
-  .no-results {
-    padding: 24px 16px;
-    text-align: center;
-    color: #717171;
-  }
-  
-  /* User Actions */
-  .user-actions {
-    display: flex;
-    align-items: center;
-  }
-  
-  .address-selector {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    margin-right: 20px;
-    font-size: 14px;
-    color: #3e3e3e;
-  }
-  
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Nunito", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: #f7f7f7;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+.home-container {
+  width: 100vw; /* Use viewport width */
+  min-height: 100vh;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Header Styles */
+.header {
+  background-color: #ffffff;
+  height: 80px;
+  width: 100vw; /* Use viewport width instead of just 100% */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0;
+  margin: 0;
+  left: 0;
+  right: 0;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 16px;
+  height: 100%;
+  max-width: 100%; /* Remove the max-width constraint */
+  margin: 0;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.ifood-logo {
+  width: 80px;
+  height: 24px;
+}
+
+/* Navigation Menu */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  margin-left: 20px;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+}
+
+.nav-item {
+  margin: 0 8px;
+  position: relative;
+}
+
+.nav-item a {
+  color: #717171;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 4px;
+  transition: color 0.3s ease;
+}
+
+.nav-item:hover a {
+  color: #ea1d2c;
+}
+
+.nav-item.active a {
+  color: #ea1d2c;
+  font-weight: 600;
+}
+
+.nav-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: -28px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #ea1d2c;
+}
+
+/* Adicionar estilos para os botões de navegação */
+.nav-link {
+  background: none;
+  border: none;
+  color: #717171;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 4px;
+  transition: color 0.3s ease;
+  cursor: pointer;
+  text-align: left;
+}
+
+.nav-item:hover .nav-link {
+  color: #ea1d2c;
+}
+
+.nav-item.active .nav-link {
+  color: #ea1d2c;
+  font-weight: 600;
+}
+
+.logo-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* Search Bar */
+.search-container {
+  flex: 1;
+  max-width: 400px;
+  margin: 0 20px;
+  position: relative;
+}
+
+.search-input {
+  display: flex;
+  align-items: center;
+  background-color: #f7f7f7;
+  border-radius: 4px;
+  padding: 0 16px;
+  height: 48px;
+  width: 100%;
+}
+
+.search-icon {
+  color: #a6a6a6;
+  margin-right: 8px;
+}
+
+.search-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #3e3e3e;
+  outline: none;
+  width: 100%;
+}
+
+.search-input input::placeholder {
+  color: #a6a6a6;
+}
+
+.clear-search {
+  background: none;
+  border: none;
+  color: #a6a6a6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+/* Search Results */
+.search-results {
+  position: absolute;
+  top: 55px;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 500px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.search-results-section {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.search-results-section h3 {
+  font-size: 14px;
+  color: #717171;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.search-results-section ul {
+  list-style: none;
+}
+
+.restaurant-item,
+.product-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.restaurant-item:hover,
+.product-item:hover {
+  background-color: #f9f9f9;
+}
+
+.restaurant-image,
+.product-image {
+  width: 60px;
+  height: 60px;
+  margin-right: 12px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.restaurant-image img,
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.restaurant-info,
+.product-info {
+  flex: 1;
+}
+
+.restaurant-info h4,
+.product-info h4 {
+  font-size: 14px;
+  color: #3e3e3e;
+  margin-bottom: 4px;
+}
+
+.restaurant-details {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #717171;
+}
+
+.restaurant-category,
+.restaurant-rating,
+.restaurant-delivery-time {
+  margin-right: 8px;
+}
+
+.restaurant-rating {
+  color: #e7a74e;
+}
+
+.restaurant-delivery-fee,
+.product-price {
+  font-size: 12px;
+  color: #3e3e3e;
+  font-weight: 600;
+}
+
+.product-restaurant {
+  font-size: 12px;
+  color: #717171;
+  margin-bottom: 4px;
+}
+
+.add-to-cart-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #ea1d2c;
+  color: white;
+  border: none;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 12px;
+}
+
+.no-results {
+  padding: 24px 16px;
+  text-align: center;
+  color: #717171;
+}
+
+/* User Actions */
+.user-actions {
+  display: flex;
+  align-items: center;
+}
+
+.address-selector {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-right: 20px;
+  font-size: 14px;
+  color: #3e3e3e;
+}
+
+.address-selector span {
+  margin-right: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.notification-icon {
+  position: relative;
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ea1d2c;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-icon {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.cart-info {
+  margin-left: 8px;
+  text-align: right;
+}
+
+.cart-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3e3e3e;
+}
+
+.cart-items {
+  font-size: 12px;
+  color: #717171;
+}
+
+/* Green Line */
+.green-line {
+  height: 4px;
+  background-color: #50a773;
+  width: 100vw; /* Use viewport width */
+  margin: 0;
+  padding: 0;
+}
+
+/* Content Area */
+.content-area {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.content-area h1 {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: #3e3e3e;
+}
+
+.content-area p {
+  font-size: 16px;
+  color: #717171;
+  margin-bottom: 32px;
+}
+
+/* Restaurants Grid */
+.restaurants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.restaurant-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.restaurant-card-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.restaurant-card h3 {
+  padding: 16px 16px 8px;
+  font-size: 16px;
+  color: #3e3e3e;
+}
+
+.restaurant-card-details {
+  display: flex;
+  padding: 0 16px 16px;
+  font-size: 12px;
+  color: #717171;
+}
+
+.restaurant-card-details span {
+  margin-right: 8px;
+}
+
+.restaurant-card-details span:first-child {
+  color: #e7a74e;
+}
+
+/* Modal de Endereço */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.address-modal {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  color: #3e3e3e;
+  font-weight: 600;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #717171;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  padding: 24px;
+}
+
+/* Lista de Endereços Salvos */
+.saved-addresses {
+  margin-bottom: 24px;
+}
+
+/* Adicionar estilos para as ações de endereço */
+.address-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.delete-address-button {
+  background: none;
+  border: none;
+  color: #717171;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.delete-address-button:hover {
+  color: #ea1d2c;
+  background-color: #fff0f0;
+}
+
+/* Ajustar o layout do item de endereço para acomodar as ações */
+.saved-address-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+  position: relative;
+}
+
+.saved-address-item:hover {
+  border-color: #ea1d2c;
+  background-color: #fff9f9;
+}
+
+.saved-address-item.selected {
+  border-color: #ea1d2c;
+  background-color: #fff9f9;
+}
+
+.address-icon {
+  margin-right: 16px;
+  color: #ea1d2c;
+}
+
+.address-details {
+  flex: 1;
+}
+
+.address-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3e3e3e;
+  margin-bottom: 4px;
+}
+
+.address-line {
+  font-size: 14px;
+  color: #3e3e3e;
+  margin-bottom: 2px;
+}
+
+.address-line.secondary {
+  color: #717171;
+  font-size: 12px;
+}
+
+.default-badge {
+  font-size: 12px;
+  color: #ea1d2c;
+  background-color: #fff0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-left: 12px;
+}
+
+.set-default-button {
+  background: none;
+  border: none;
+  color: #ea1d2c;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 12px;
+  text-decoration: underline;
+}
+
+.add-address-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  background-color: #ea1d2c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-address-button:hover {
+  background-color: #d41a27;
+}
+
+.add-address-button svg {
+  margin-right: 8px;
+}
+
+/* Busca de Endereço */
+.address-search-container {
+  margin-bottom: 24px;
+}
+
+.address-search-input {
+  display: flex;
+  align-items: center;
+  background-color: #f7f7f7;
+  border-radius: 4px;
+  padding: 0 16px;
+  height: 48px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.address-search-icon {
+  color: #a6a6a6;
+  margin-right: 8px;
+}
+
+.address-search-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #3e3e3e;
+  outline: none;
+  width: 100%;
+}
+
+.address-search-input input::placeholder {
+  color: #a6a6a6;
+}
+
+.address-suggestions {
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+}
+
+.address-suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.address-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.address-suggestion-item:hover {
+  background-color: #f9f9f9;
+}
+
+.suggestion-icon {
+  color: #a6a6a6;
+  margin-right: 12px;
+}
+
+.suggestion-details {
+  flex: 1;
+}
+
+.suggestion-main-text {
+  font-size: 14px;
+  color: #3e3e3e;
+  margin-bottom: 2px;
+}
+
+.suggestion-secondary-text {
+  font-size: 12px;
+  color: #717171;
+}
+
+.address-map-container {
+  width: 100%;
+  height: 250px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #f7f7f7;
+  margin-bottom: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+/* Formulário de Endereço */
+.address-form {
+  margin-bottom: 24px;
+}
+
+.address-label-selector {
+  margin-bottom: 20px;
+}
+
+.label-title {
+  font-size: 14px;
+  color: #717171;
+  margin-bottom: 8px;
+}
+
+.label-options {
+  display: flex;
+  gap: 12px;
+}
+
+.label-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #f7f7f7;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #3e3e3e;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.label-option svg {
+  margin-right: 8px;
+}
+
+.label-option.selected {
+  background-color: #fff0f0;
+  border-color: #ea1d2c;
+  color: #ea1d2c;
+}
+
+.form-row {
+  margin-bottom: 16px;
+}
+
+.form-row.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  color: #717171;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #3e3e3e;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #ea1d2c;
+}
+
+.form-group.checkbox {
+  flex-direction: row;
+  align-items: center;
+}
+
+.form-group.checkbox input {
+  height: auto;
+  margin-right: 8px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal-back-button {
+  flex: 1;
+  padding: 12px;
+  background-color: white;
+  color: #3e3e3e;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.modal-back-button:hover {
+  background-color: #f7f7f7;
+}
+
+.modal-save-button {
+  flex: 2;
+  padding: 12px;
+  background-color: #ea1d2c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.modal-save-button:hover {
+  background-color: #d41a27;
+}
+
+.modal-save-button:disabled {
+  background-color: #f0f0f0;
+  color: #a6a6a6;
+  cursor: not-allowed;
+}
+
+/* Mobile Menu Toggle */
+.menu-toggle {
+  display: none;
+  cursor: pointer;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+}
+
+.hamburger .bar {
+  height: 2px;
+  width: 100%;
+  background-color: #3e3e3e;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.active .bar:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.hamburger.active .bar:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active .bar:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 1024px) {
   .address-selector span {
-    margin-right: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 150px;
+    max-width: 120px;
   }
-  
-  .notification-icon {
-    position: relative;
-    margin-right: 20px;
-    cursor: pointer;
+
+  .search-results {
+    width: 150%;
+    left: -25%;
   }
-  
-  .notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #ea1d2c;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+}
+
+@media screen and (max-width: 900px) {
+  .search-container {
+    max-width: 300px;
   }
-  
-  .cart-icon {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
+
+  .address-selector span {
+    max-width: 100px;
   }
-  
-  .cart-info {
-    margin-left: 8px;
-    text-align: right;
+}
+
+@media screen and (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+    order: 1;
   }
-  
-  .cart-total {
-    font-size: 14px;
-    font-weight: 600;
-    color: #3e3e3e;
-  }
-  
-  .cart-items {
-    font-size: 12px;
-    color: #717171;
-  }
-  
-  /* Green Line */
-  .green-line {
-    height: 4px;
-    background-color: #50a773;
-    width: 100%;
-  }
-  
-  /* Content Area */
-  .content-area {
-    padding: 40px 20px;
-    max-width: 1200px;
+
+  .logo {
+    order: 2;
     margin: 0 auto;
   }
-  
-  .content-area h1 {
-    font-size: 24px;
-    margin-bottom: 16px;
-    color: #3e3e3e;
-  }
-  
-  .content-area p {
-    font-size: 16px;
-    color: #717171;
-    margin-bottom: 32px;
-  }
-  
-  /* Restaurants Grid */
-  .restaurants-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 24px;
-    margin-top: 24px;
-  }
-  
-  .restaurant-card {
-    background-color: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-  }
-  
-  .restaurant-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .restaurant-card-image {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-  }
-  
-  .restaurant-card h3 {
-    padding: 16px 16px 8px;
-    font-size: 16px;
-    color: #3e3e3e;
-  }
-  
-  .restaurant-card-details {
-    display: flex;
-    padding: 0 16px 16px;
-    font-size: 12px;
-    color: #717171;
-  }
-  
-  .restaurant-card-details span {
-    margin-right: 8px;
-  }
-  
-  .restaurant-card-details span:first-child {
-    color: #e7a74e;
-  }
-  
-  /* Modal de Endereço */
-  .modal-overlay {
+
+  .nav-menu {
     position: fixed;
-    top: 0;
+    top: 80px;
+    left: -100%;
+    width: 100%;
+    height: calc(100vh - 80px);
+    background-color: white;
+    flex-direction: column;
+    transition: all 0.3s ease-in-out;
+    margin-left: 0;
+    z-index: 999;
+  }
+
+  .nav-menu.active {
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1100;
   }
-  
-  .address-modal {
-    background-color: white;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  }
-  
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 24px;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  
-  .modal-header h2 {
-    font-size: 18px;
-    color: #3e3e3e;
-    font-weight: 600;
-  }
-  
-  .close-modal {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #717171;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .modal-content {
-    padding: 24px;
-  }
-  
-  /* Lista de Endereços Salvos */
-  .saved-addresses {
-    margin-bottom: 24px;
-  }
-  
-  /* Adicionar estilos para as ações de endereço */
-  .address-actions {
-    display: flex;
+
+  .nav-list {
     flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-  }
-  
-  .delete-address-button {
-    background: none;
-    border: none;
-    color: #717171;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-  }
-  
-  .delete-address-button:hover {
-    color: #ea1d2c;
-    background-color: #fff0f0;
-  }
-  
-  /* Ajustar o layout do item de endereço para acomodar as ações */
-  .saved-address-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 16px;
-    border: 1px solid #f0f0f0;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    transition: border-color 0.2s, background-color 0.2s;
-    position: relative;
-  }
-  
-  .saved-address-item:hover {
-    border-color: #ea1d2c;
-    background-color: #fff9f9;
-  }
-  
-  .saved-address-item.selected {
-    border-color: #ea1d2c;
-    background-color: #fff9f9;
-  }
-  
-  .address-icon {
-    margin-right: 16px;
-    color: #ea1d2c;
-  }
-  
-  .address-details {
-    flex: 1;
-  }
-  
-  .address-label {
-    font-size: 16px;
-    font-weight: 600;
-    color: #3e3e3e;
-    margin-bottom: 4px;
-  }
-  
-  .address-line {
-    font-size: 14px;
-    color: #3e3e3e;
-    margin-bottom: 2px;
-  }
-  
-  .address-line.secondary {
-    color: #717171;
-    font-size: 12px;
-  }
-  
-  .default-badge {
-    font-size: 12px;
-    color: #ea1d2c;
-    background-color: #fff0f0;
-    padding: 4px 8px;
-    border-radius: 4px;
-    margin-left: 12px;
-  }
-  
-  .set-default-button {
-    background: none;
-    border: none;
-    color: #ea1d2c;
-    font-size: 12px;
-    cursor: pointer;
-    margin-left: 12px;
-    text-decoration: underline;
-  }
-  
-  .add-address-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 12px;
-    background-color: #ea1d2c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .add-address-button:hover {
-    background-color: #d41a27;
-  }
-  
-  .add-address-button svg {
-    margin-right: 8px;
-  }
-  
-  /* Busca de Endereço */
-  .address-search-container {
-    margin-bottom: 24px;
-  }
-  
-  .address-search-input {
-    display: flex;
-    align-items: center;
-    background-color: #f7f7f7;
-    border-radius: 4px;
-    padding: 0 16px;
-    height: 48px;
-    width: 100%;
-    margin-bottom: 16px;
-  }
-  
-  .address-search-icon {
-    color: #a6a6a6;
-    margin-right: 8px;
-  }
-  
-  .address-search-input input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-size: 14px;
-    color: #3e3e3e;
-    outline: none;
     width: 100%;
   }
-  
-  .address-search-input input::placeholder {
-    color: #a6a6a6;
-  }
-  
-  .address-suggestions {
-    background-color: white;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    margin-bottom: 16px;
-  }
-  
-  .address-suggestion-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  
-  .address-suggestion-item:last-child {
-    border-bottom: none;
-  }
-  
-  .address-suggestion-item:hover {
-    background-color: #f9f9f9;
-  }
-  
-  .suggestion-icon {
-    color: #a6a6a6;
-    margin-right: 12px;
-  }
-  
-  .suggestion-details {
-    flex: 1;
-  }
-  
-  .suggestion-main-text {
-    font-size: 14px;
-    color: #3e3e3e;
-    margin-bottom: 2px;
-  }
-  
-  .suggestion-secondary-text {
-    font-size: 12px;
-    color: #717171;
-  }
-  
-  .address-map-container {
+
+  .nav-item {
+    margin: 0;
     width: 100%;
-    height: 250px;
-    border-radius: 4px;
-    overflow: hidden;
-    background-color: #f7f7f7;
-    margin-bottom: 16px;
-    border: 1px solid #e0e0e0;
-  }
-  
-  /* Formulário de Endereço */
-  .address-form {
-    margin-bottom: 24px;
-  }
-  
-  .address-label-selector {
-    margin-bottom: 20px;
-  }
-  
-  .label-title {
-    font-size: 14px;
-    color: #717171;
-    margin-bottom: 8px;
-  }
-  
-  .label-options {
-    display: flex;
-    gap: 12px;
-  }
-  
-  .label-option {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    background-color: #f7f7f7;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #3e3e3e;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .label-option svg {
-    margin-right: 8px;
-  }
-  
-  .label-option.selected {
-    background-color: #fff0f0;
-    border-color: #ea1d2c;
-    color: #ea1d2c;
-  }
-  
-  .form-row {
-    margin-bottom: 16px;
-  }
-  
-  .form-row.two-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  
-  .form-group {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .form-group label {
-    font-size: 14px;
-    color: #717171;
-    margin-bottom: 8px;
-  }
-  
-  .form-group input {
-    height: 48px;
-    padding: 0 16px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #3e3e3e;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  
-  .form-group input:focus {
-    border-color: #ea1d2c;
-  }
-  
-  .form-group.checkbox {
-    flex-direction: row;
-    align-items: center;
-  }
-  
-  .form-group.checkbox input {
-    height: auto;
-    margin-right: 8px;
-  }
-  
-  .modal-actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-  }
-  
-  .modal-back-button {
-    flex: 1;
-    padding: 12px;
-    background-color: white;
-    color: #3e3e3e;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .modal-back-button:hover {
-    background-color: #f7f7f7;
-  }
-  
-  .modal-save-button {
-    flex: 2;
-    padding: 12px;
-    background-color: #ea1d2c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .modal-save-button:hover {
-    background-color: #d41a27;
-  }
-  
-  .modal-save-button:disabled {
-    background-color: #f0f0f0;
-    color: #a6a6a6;
-    cursor: not-allowed;
-  }
-  
-  /* Mobile Menu Toggle */
-  .menu-toggle {
-    display: none;
-    cursor: pointer;
-  }
-  
-  .hamburger {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 24px;
-    height: 18px;
-  }
-  
-  .hamburger .bar {
-    height: 2px;
-    width: 100%;
-    background-color: #3e3e3e;
-    border-radius: 2px;
-    transition: all 0.3s ease;
-  }
-  
-  .hamburger.active .bar:nth-child(1) {
-    transform: translateY(8px) rotate(45deg);
-  }
-  
-  .hamburger.active .bar:nth-child(2) {
-    opacity: 0;
-  }
-  
-  .hamburger.active .bar:nth-child(3) {
-    transform: translateY(-8px) rotate(-45deg);
-  }
-  
-  /* Responsive Styles */
-  @media screen and (max-width: 1024px) {
-    .address-selector span {
-      max-width: 120px;
-    }
-  
-    .search-results {
-      width: 150%;
-      left: -25%;
-    }
-  }
-  
-  @media screen and (max-width: 900px) {
-    .search-container {
-      max-width: 300px;
-    }
-  
-    .address-selector span {
-      max-width: 100px;
-    }
-  }
-  
-  @media screen and (max-width: 768px) {
-    .menu-toggle {
-      display: block;
-      order: 1;
-    }
-  
-    .logo {
-      order: 2;
-      margin: 0 auto;
-    }
-  
-    .nav-menu {
-      position: fixed;
-      top: 80px;
-      left: -100%;
-      width: 100%;
-      height: calc(100vh - 80px);
-      background-color: white;
-      flex-direction: column;
-      transition: all 0.3s ease-in-out;
-      margin-left: 0;
-      z-index: 999;
-    }
-  
-    .nav-menu.active {
-      left: 0;
-    }
-  
-    .nav-list {
-      flex-direction: column;
-      width: 100%;
-    }
-  
-    .nav-item {
-      margin: 0;
-      width: 100%;
-      text-align: center;
-      padding: 16px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-  
-    .nav-item.active::after {
-      display: none;
-    }
-  
-    .search-container {
-      order: 3;
-      max-width: none;
-      width: 100%;
-      margin: 10px 0;
-      position: absolute;
-      top: 80px;
-      left: 0;
-      padding: 0 16px;
-      background-color: white;
-      z-index: 998;
-      display: none;
-    }
-  
-    .search-container.active {
-      display: block;
-    }
-  
-    .search-results {
-      top: 65px;
-      width: calc(100% - 32px);
-      left: 16px;
-    }
-  
-    .user-actions {
-      order: 4;
-    }
-  
-    .address-selector {
-      display: none;
-    }
-  
-    .header-container {
-      flex-wrap: wrap;
-    }
-  
-    .restaurants-grid {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
-  
-    .form-row.two-columns {
-      grid-template-columns: 1fr;
-    }
-  
-    .address-modal {
-      width: 95%;
-      max-height: 80vh;
-    }
-  }
-  
-  @media screen and (max-width: 480px) {
-    .notification-icon,
-    .cart-info {
-      display: none;
-    }
-  
-    .cart-icon {
-      margin-left: 10px;
-    }
-  
-    .header {
-      height: 60px;
-    }
-  
-    .nav-menu {
-      top: 60px;
-      height: calc(100vh - 60px);
-    }
-  
-    .search-container {
-      top: 60px;
-    }
-  
-    .search-results {
-      max-height: 400px;
-    }
-  
-    .restaurants-grid {
-      grid-template-columns: 1fr;
-    }
-  
-    .modal-actions {
-      flex-direction: column;
-    }
-  
-    .modal-back-button,
-    .modal-save-button {
-      width: 100%;
-    }
-  }
-  
-  /* Adicionar estilos para estados vazios */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
     text-align: center;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    margin-top: 20px;
-  }
-  
-  .empty-state-icon {
-    color: #ccc;
-    margin-bottom: 20px;
-  }
-  
-  .empty-state h2 {
-    font-size: 20px;
-    color: #3e3e3e;
-    margin-bottom: 10px;
-  }
-  
-  .empty-state p {
-    font-size: 16px;
-    color: #717171;
-  }
-  
-  .empty-addresses {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 30px 20px;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .empty-addresses-icon {
-    color: #ccc;
-    margin-bottom: 16px;
-  }
-  
-  .empty-addresses h3 {
-    font-size: 18px;
-    color: #3e3e3e;
-    margin-bottom: 8px;
-  }
-  
-  .empty-addresses p {
-    font-size: 14px;
-    color: #717171;
-  }
-  
-  .address-manual-entry {
-    margin: 16px 0;
-  }
-  
-  .manual-entry-button {
-    width: 100%;
-    padding: 12px;
-    background: none;
-    border: 1px dashed #ccc;
-    border-radius: 4px;
-    color: #717171;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .manual-entry-button:hover {
-    border-color: #ea1d2c;
-    color: #ea1d2c;
-  }
-  
-  /* Estilos para o mapa do Google */
-  .address-map-container {
-    width: 100%;
-    height: 250px;
-    border-radius: 4px;
-    overflow: hidden;
-    background-color: #f7f7f7;
-    margin-bottom: 16px;
-    border: 1px solid #e0e0e0;
-  }
-  
-  /* Estilos para o dropdown do Google Autocomplete */
-  .pac-container {
-    border-radius: 4px;
-    margin-top: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e0e0e0;
-    font-family: "Nunito", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  }
-  
-  .pac-item {
-    padding: 8px 12px;
-    cursor: pointer;
-  }
-  
-  .pac-item:hover {
-    background-color: #f9f9f9;
-  }
-  
-  .pac-item-query {
-    font-size: 14px;
-    color: #3e3e3e;
-  }
-  
-  .pac-matched {
-    font-weight: bold;
-    color: #ea1d2c;
-  }
-  
-  .pac-icon {
-    margin-right: 8px;
-  }
-  
-  .pac-item-secondary {
-    font-size: 12px;
-    color: #717171;
-  }
-  
-  /* Estilos para a Sacola (Carrinho) */
-  .cart-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1200;
-    display: flex;
-    justify-content: flex-end;
-  }
-  
-  .cart-sidebar {
-    width: 100%;
-    max-width: 450px;
-    height: 100%;
-    background-color: white;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
-    display: flex;
-    flex-direction: column;
-    animation: slideIn 0.3s ease-out;
-  }
-  
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-  
-  .cart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 24px;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  
-  .cart-header h2 {
-    font-size: 20px;
-    color: #3e3e3e;
-    font-weight: 600;
-  }
-  
-  .close-cart {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #717171;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .cart-content {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .cart-restaurant {
-    padding: 16px 24px;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  
-  .cart-restaurant h3 {
-    font-size: 18px;
-    color: #3e3e3e;
-    margin-bottom: 4px;
-  }
-  
-  .cart-restaurant p {
-    font-size: 14px;
-    color: #717171;
-  }
-  
-  .cart-items-list {
-    flex: 1;
-    padding: 16px 24px;
-    overflow-y: auto;
-  }
-  
-  .cart-item {
-    display: flex;
     padding: 16px 0;
     border-bottom: 1px solid #f0f0f0;
   }
-  
-  .cart-item:last-child {
-    border-bottom: none;
+
+  .nav-item.active::after {
+    display: none;
   }
-  
-  .cart-item-image {
-    width: 60px;
+
+  .search-container {
+    order: 3;
+    max-width: none;
+    width: 100%;
+    margin: 10px 0;
+    position: absolute;
+    top: 80px;
+    left: 0;
+    padding: 0 16px;
+    background-color: white;
+    z-index: 998;
+    display: none;
+  }
+
+  .search-container.active {
+    display: block;
+  }
+
+  .search-results {
+    top: 65px;
+    width: calc(100% - 32px);
+    left: 16px;
+  }
+
+  .user-actions {
+    order: 4;
+  }
+
+  .address-selector {
+    display: none;
+  }
+
+  .header-container {
+    flex-wrap: wrap;
+  }
+
+  .restaurants-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .form-row.two-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .address-modal {
+    width: 95%;
+    max-height: 80vh;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .notification-icon,
+  .cart-info {
+    display: none;
+  }
+
+  .cart-icon {
+    margin-left: 10px;
+  }
+
+  .header {
     height: 60px;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-right: 16px;
   }
-  
-  .cart-item-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+
+  .nav-menu {
+    top: 60px;
+    height: calc(100vh - 60px);
   }
-  
-  .cart-item-details {
-    flex: 1;
+
+  .search-container {
+    top: 60px;
   }
-  
-  .cart-item-details h4 {
-    font-size: 16px;
-    color: #3e3e3e;
-    margin-bottom: 4px;
+
+  .search-results {
+    max-height: 400px;
   }
-  
-  .cart-item-price {
-    font-size: 14px;
-    color: #3e3e3e;
-    font-weight: 600;
-    margin-bottom: 12px;
+
+  .restaurants-grid {
+    grid-template-columns: 1fr;
   }
-  
-  .cart-item-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .remove-item {
-    background: none;
-    border: none;
-    color: #ea1d2c;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 4px;
-  }
-  
-  .quantity-controls {
-    display: flex;
-    align-items: center;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  
-  .quantity-btn {
-    width: 32px;
-    height: 32px;
-    background: none;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #3e3e3e;
-  }
-  
-  .quantity-btn:disabled {
-    color: #ccc;
-    cursor: not-allowed;
-  }
-  
-  .quantity {
-    width: 32px;
-    text-align: center;
-    font-size: 14px;
-    color: #3e3e3e;
-  }
-  
-  .cart-summary {
-    padding: 16px 24px;
-    border-top: 1px solid #f0f0f0;
-    background-color: #f9f9f9;
-  }
-  
-  .summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 14px;
-    color: #717171;
-  }
-  
-  .summary-row.total {
-    margin-top: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #3e3e3e;
-  }
-  
-  .cart-footer {
-    padding: 16px 24px;
-    border-top: 1px solid #f0f0f0;
-  }
-  
-  .checkout-button {
-    width: 100%;
-    padding: 16px;
-    background-color: #ea1d2c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .checkout-button:hover {
-    background-color: #d41a27;
-  }
-  
-  .checkout-button span {
-    margin-right: 8px;
-  }
-  
-  .empty-cart {
-    flex: 1;
-    display: flex;
+
+  .modal-actions {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    text-align: center;
   }
-  
-  .empty-cart-icon {
-    color: #ccc;
-    margin-bottom: 20px;
+
+  .modal-back-button,
+  .modal-save-button {
+    width: 100%;
   }
-  
-  .empty-cart h3 {
-    font-size: 18px;
-    color: #3e3e3e;
-    margin-bottom: 8px;
+}
+
+/* Adicionar estilos para estados vazios */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.empty-state-icon {
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.empty-state h2 {
+  font-size: 20px;
+  color: #3e3e3e;
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #717171;
+}
+
+.empty-addresses {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.empty-addresses-icon {
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.empty-addresses h3 {
+  font-size: 18px;
+  color: #3e3e3e;
+  margin-bottom: 8px;
+}
+
+.empty-addresses p {
+  font-size: 14px;
+  color: #717171;
+}
+
+.address-manual-entry {
+  margin: 16px 0;
+}
+
+.manual-entry-button {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  color: #717171;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.manual-entry-button:hover {
+  border-color: #ea1d2c;
+  color: #ea1d2c;
+}
+
+/* Estilos para o mapa do Google */
+.address-map-container {
+  width: 100%;
+  height: 250px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #f7f7f7;
+  margin-bottom: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+/* Estilos para o dropdown do Google Autocomplete */
+.pac-container {
+  border-radius: 4px;
+  margin-top: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  font-family: "Nunito", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.pac-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.pac-item:hover {
+  background-color: #f9f9f9;
+}
+
+.pac-item-query {
+  font-size: 14px;
+  color: #3e3e3e;
+}
+
+.pac-matched {
+  font-weight: bold;
+  color: #ea1d2c;
+}
+
+.pac-icon {
+  margin-right: 8px;
+}
+
+.pac-item-secondary {
+  font-size: 12px;
+  color: #717171;
+}
+
+/* Estilos para a Sacola (Carrinho) */
+.cart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1200;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cart-sidebar {
+  width: 100%;
+  max-width: 450px;
+  height: 100%;
+  background-color: white;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
   }
-  
-  .empty-cart p {
-    font-size: 14px;
-    color: #717171;
+  to {
+    transform: translateX(0);
   }
-  
-  @media screen and (max-width: 768px) {
-    .cart-sidebar {
-      max-width: 100%;
-    }
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-header h2 {
+  font-size: 20px;
+  color: #3e3e3e;
+  font-weight: 600;
+}
+
+.close-cart {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #717171;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-restaurant {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-restaurant h3 {
+  font-size: 18px;
+  color: #3e3e3e;
+  margin-bottom: 4px;
+}
+
+.cart-restaurant p {
+  font-size: 14px;
+  color: #717171;
+}
+
+.cart-items-list {
+  flex: 1;
+  padding: 16px 24px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: flex;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.cart-item-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 16px;
+}
+
+.cart-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cart-item-details {
+  flex: 1;
+}
+
+.cart-item-details h4 {
+  font-size: 16px;
+  color: #3e3e3e;
+  margin-bottom: 4px;
+}
+
+.cart-item-price {
+  font-size: 14px;
+  color: #3e3e3e;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.cart-item-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remove-item {
+  background: none;
+  border: none;
+  color: #ea1d2c;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.quantity-btn {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #3e3e3e;
+}
+
+.quantity-btn:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.quantity {
+  width: 32px;
+  text-align: center;
+  font-size: 14px;
+  color: #3e3e3e;
+}
+
+.cart-summary {
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  background-color: #f9f9f9;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #717171;
+}
+
+.summary-row.total {
+  margin-top: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3e3e3e;
+}
+
+.cart-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.checkout-button {
+  width: 100%;
+  padding: 16px;
+  background-color: #ea1d2c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.checkout-button:hover {
+  background-color: #d41a27;
+}
+
+.checkout-button span {
+  margin-right: 8px;
+}
+
+.empty-cart {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.empty-cart-icon {
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.empty-cart h3 {
+  font-size: 18px;
+  color: #3e3e3e;
+  margin-bottom: 8px;
+}
+
+.empty-cart p {
+  font-size: 14px;
+  color: #717171;
+}
+
+@media screen and (max-width: 768px) {
+  .cart-sidebar {
+    max-width: 100%;
   }
-  
+}
