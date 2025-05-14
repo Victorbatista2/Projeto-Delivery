@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import "./CadastroRestaurante.css"
@@ -11,6 +13,7 @@ const CadastroRestaurante = () => {
     cnpj: "",
     telefone: "",
     email: "",
+    categoria: "", // Adicionando o campo categoria
 
     // Dados do endereço
     cep: "",
@@ -79,6 +82,10 @@ const CadastroRestaurante = () => {
         newErrors.email = "E-mail é obrigatório"
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         newErrors.email = "E-mail inválido"
+      }
+
+      if (!formData.categoria) {
+        newErrors.categoria = "Categoria é obrigatória"
       }
     } else if (currentStep === 2) {
       if (!formData.cep.trim()) {
@@ -315,6 +322,37 @@ const CadastroRestaurante = () => {
                 className={errors.nomeRestaurante ? "error" : ""}
               />
               {errors.nomeRestaurante && <span className="error-message">{errors.nomeRestaurante}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="categoria">Categoria do Restaurante *</label>
+              <select
+                id="categoria"
+                name="categoria"
+                value={formData.categoria}
+                onChange={handleChange}
+                className={errors.categoria ? "error" : ""}
+              >
+                <option value="">Selecione uma categoria</option>
+                <option value="Lanches">Lanches</option>
+                <option value="Pizza">Pizza</option>
+                <option value="Doces & Bolos">Doces & Bolos</option>
+                <option value="Japonesa">Japonesa</option>
+                <option value="Brasileira">Brasileira</option>
+                <option value="Açaí">Açaí</option>
+                <option value="Árabe">Árabe</option>
+                <option value="Chinesa">Chinesa</option>
+                <option value="Sorvetes">Sorvetes</option>
+                <option value="Italiana">Italiana</option>
+                <option value="Vegetariana">Vegetariana</option>
+                <option value="Carnes">Carnes</option>
+                <option value="Salgados">Salgados</option>
+                <option value="Gourmet">Gourmet</option>
+                <option value="Marmita">Marmita</option>
+                <option value="Pastel">Pastel</option>
+                <option value="Padarias">Padarias</option>
+              </select>
+              {errors.categoria && <span className="error-message">{errors.categoria}</span>}
             </div>
 
             <div className="form-group">
@@ -738,6 +776,13 @@ const CadastroRestaurante = () => {
 
   return (
     <div className="cadastro-restaurante-container">
+      <div className="login-section">
+        <span className="login-text">Já é parceiro?</span>
+        <a href="/login" className="login-button">
+          Login
+        </a>
+      </div>
+
       <div className="cadastro-header">
         <div className="logo-container">
           <svg viewBox="0 0 80 24" className="ifood-logo">
@@ -780,54 +825,14 @@ const CadastroRestaurante = () => {
         <div className="form-container">
           <form onSubmit={handleSubmit}>{renderStep()}</form>
         </div>
-
-        <div className="benefits-container">
-          <div className="benefits-content">
-            <h3>Vantagens de ser um parceiro iFood</h3>
-            <ul className="benefits-list">
-              <li>
-                <div className="benefit-icon">📈</div>
-                <div className="benefit-text">
-                  <h4>Aumente suas vendas</h4>
-                  <p>Alcance milhões de clientes em potencial</p>
-                </div>
-              </li>
-              <li>
-                <div className="benefit-icon">🚀</div>
-                <div className="benefit-text">
-                  <h4>Gestão simplificada</h4>
-                  <p>Ferramentas para gerenciar seu negócio</p>
-                </div>
-              </li>
-              <li>
-                <div className="benefit-icon">📱</div>
-                <div className="benefit-text">
-                  <h4>Visibilidade online</h4>
-                  <p>Seu restaurante disponível 24h por dia</p>
-                </div>
-              </li>
-              <li>
-                <div className="benefit-icon">💰</div>
-                <div className="benefit-text">
-                  <h4>Pagamentos seguros</h4>
-                  <p>Receba seus pagamentos de forma rápida e segura</p>
-                </div>
-              </li>
-              <li>
-                <div className="benefit-icon">📊</div>
-                <div className="benefit-text">
-                  <h4>Relatórios detalhados</h4>
-                  <p>Acompanhe o desempenho do seu negócio</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
       </div>
     </div>
   )
 }
 
 export default CadastroRestaurante
+
+
+
 
 
