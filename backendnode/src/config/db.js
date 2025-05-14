@@ -2,7 +2,7 @@ require('dotenv').config();
 const { Pool } = require("pg");
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:426715@localhost:5432/postgres',
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:1234@localhost:5432/Projeto_Ifood',
 });
 
 async function connect() {
