@@ -15,7 +15,67 @@ import {
   Minus,
   Trash2,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Ticket,
+  Coffee,
+  Pizza,
+  Utensils,
+  ShoppingCart,
+  Cake,
+  Fish,
+  Beef,
+  Apple,
+  Beer,
+  Sandwich,
 } from "lucide-react"
+
+const getCategoryIcon = (category) => {
+  switch (category?.toLowerCase()) {
+    case "lanches":
+      return <Sandwich size={24} />
+    case "pizza":
+      return <Pizza size={24} />
+    case "japonesa":
+      return <Fish size={24} />
+    case "brasileira":
+      return <Utensils size={24} />
+    case "doces & bolos":
+      return <Cake size={24} />
+    case "árabe":
+      return <Utensils size={24} />
+    case "chinesa":
+      return <Utensils size={24} />
+    case "italiana":
+      return <Utensils size={24} />
+    case "vegetariana":
+      return <Apple size={24} />
+    case "carnes":
+      return <Beef size={24} />
+    case "açaí":
+      return <Apple size={24} />
+    case "sorvetes":
+      return <Coffee size={24} />
+    case "salgados":
+      return <Sandwich size={24} />
+    case "gourmet":
+      return <Utensils size={24} />
+    case "marmita":
+      return <Utensils size={24} />
+    case "pastel":
+      return <Sandwich size={24} />
+    case "padarias":
+      return <Cake size={24} />
+    case "bebidas":
+      return <Beer size={24} />
+    case "café":
+      return <Coffee size={24} />
+    case "mercado":
+      return <ShoppingCart size={24} />
+    default:
+      return <Utensils size={24} />
+  }
+}
 
 const HomePage = ({ user, onLogout, onProceedToPayment }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -31,6 +91,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
   // Restaurantes e produtos
   const [restaurants, setRestaurants] = useState([])
   const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
 
   // Estados para o modal de endereço
   const [showAddressModal, setShowAddressModal] = useState(false)
@@ -59,6 +120,139 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
   const [cartProducts, setCartProducts] = useState([])
   const [deliveryFee, setDeliveryFee] = useState(7.9)
   const cartRef = useRef(null)
+
+  // Add these refs for the carousels
+  const categoriesContainerRef = useRef(null)
+  const productsContainerRef = useRef(null)
+
+  // Adicionar uma nova função para lidar com o clique na categoria
+  const handleCategoryClick = (category) => {
+    // Redirecionar para a página da categoria
+    window.location.href = `/categoria/${category.toLowerCase().replace(/\s+/g, "-")}`
+  }
+
+  // Add this function to handle carousel scrolling
+  const handleCarouselScroll = (containerRef, direction) => {
+    if (!containerRef.current) return
+
+    const scrollAmount = direction === "left" ? -300 : 300
+    containerRef.current.scrollBy({
+      left: scrollAmount,
+      behavior: "smooth",
+    })
+  }
+
+  // Add this function to fetch restaurants and products
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    try {
+      // Fetch restaurants from your API
+      const restaurantsResponse = await fetch("http://localhost:3001/api/restaurants")
+      const restaurantsData = await restaurantsResponse.json()
+
+      if (restaurantsData && Array.isArray(restaurantsData)) {
+        setRestaurants(restaurantsData)
+      }
+
+      // Fetch products from your API
+      const productsResponse = await fetch("http://localhost:3001/api/products")
+      const productsData = await productsResponse.json()
+
+      if (productsData && Array.isArray(productsData)) {
+        setProducts(productsData)
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      // Initialize with empty arrays if fetch fails
+      setRestaurants([])
+      setProducts([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Add this useEffect to fetch data on component mount
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // Substitua o useEffect para os botões do carrossel pelo código abaixo
+  // Localizar o useEffect que começa com:
+  // useEffect(() => {
+  //   const handleCategoryPrev = () => {
+  // E substitua todo o bloco
+  useEffect(() => {
+    // Funções para lidar com o scroll do carrossel
+    const handleCategoryPrev = () => {
+      if (categoriesContainerRef.current) {
+        categoriesContainerRef.current.scrollBy({
+          left: -300,
+          behavior: "smooth",
+        })
+      }
+    }
+
+    const handleCategoryNext = () => {
+      if (categoriesContainerRef.current) {
+        categoriesContainerRef.current.scrollBy({
+          left: 300,
+          behavior: "smooth",
+        })
+      }
+    }
+
+    const handleProductsPrev = () => {
+      if (productsContainerRef.current) {
+        productsContainerRef.current.scrollBy({
+          left: -300,
+          behavior: "smooth",
+        })
+      }
+    }
+
+    const handleProductsNext = () => {
+      if (productsContainerRef.current) {
+        productsContainerRef.current.scrollBy({
+          left: 300,
+          behavior: "smooth",
+        })
+      }
+    }
+
+    // Selecionar os botões do carrossel
+    const categoryPrevBtn = document.getElementById("category-prev-btn")
+    const categoryNextBtn = document.getElementById("category-next-btn")
+    const productsPrevBtn = document.querySelector(".free-delivery-section .carousel-prev")
+    const productsNextBtn = document.querySelector(".free-delivery-section .carousel-next")
+
+    // Adicionar event listeners
+    if (categoryPrevBtn) categoryPrevBtn.addEventListener("click", handleCategoryPrev)
+    if (categoryNextBtn) categoryNextBtn.addEventListener("click", handleCategoryNext)
+    if (productsPrevBtn) productsPrevBtn.addEventListener("click", handleProductsPrev)
+    if (productsNextBtn) productsNextBtn.addEventListener("click", handleProductsNext)
+
+    // Verificar se todas as categorias estão sendo renderizadas
+    console.log(
+      "Categorias renderizadas:",
+      Array.from(document.querySelectorAll(".category-name")).map((el) => el.textContent),
+    )
+
+    // Limpar event listeners
+    return () => {
+      if (categoryPrevBtn) categoryPrevBtn.removeEventListener("click", handleCategoryPrev)
+      if (categoryNextBtn) categoryNextBtn.removeEventListener("click", handleCategoryNext)
+      if (productsPrevBtn) productsPrevBtn.removeEventListener("click", handleProductsPrev)
+      if (productsNextBtn) productsNextBtn.removeEventListener("click", handleProductsNext)
+    }
+  }, [])
+
+  // Adicionar uma verificação para garantir que todas as categorias estão sendo renderizadas
+  useEffect(() => {
+    console.log(
+      "Categorias renderizadas:",
+      Array.from(document.querySelectorAll(".category-name")).map((el) => el.textContent),
+    )
+  }, [])
 
   // Adicionar a função para excluir um endereço
   const deleteAddress = (addressId, e) => {
@@ -564,6 +758,28 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
     return calculateSubtotal() + deliveryFee
   }
 
+  // Function to get the category icon
+  // const getCategoryIcon = (category) => {
+  //   switch (category) {
+  //     case "Fast Food":
+  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>; // Example: Burger icon
+  //     case "Pizza":
+  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2z"></path><path d="M12 18L12 8"></path></svg>; // Example: Pizza slice icon
+  //     case "Sandwich":
+  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"></rect><line x1="2" y1="9" x2="22" y2="9"></line></svg>; // Example: Sandwich icon
+  //     case "Fried Chicken":
+  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 0 1 2.59 7.59"></path><path d="M5.64 6.64a9 9 0 0 0-2.59 7.59"></path><line x1="8" y1="6" x2="8" y2="2"></line><line x1="16" y1="6" x2="16" y2="2"></line><rect x="2" y="14" width="20" height="8" rx="2"></rect></svg>; // Example: Chicken icon
+  //     case "Mexican":
+  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h18l-4 18-7-5-7 5-4-18z"></path></svg>; // Example: Taco icon
+  //     case "Coffee":
+  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v8a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="10" x2="6" y2="14"></line><line x1="10" y1="10" x2="10" y2="14"></line></svg>; // Example: Coffee cup icon
+  //     case "Donuts":
+  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8a4 4 0 0 1 4 4"></path><path d="M8 12a4 4 0 0 1 4-4"></path><path d="M12 16a4 4 0 0 1-4-4"></path><path d="M16 12a4 4 0 0 1-4 4"></path></svg>; // Example: Donut icon
+  //     default:
+  //       return <ShoppingBag size={24} />; // Default icon
+  //   }
+  // };
+
   return (
     <div className="home-container">
       <header className="header">
@@ -738,38 +954,268 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
 
       {/* Page Content */}
       <div className="content-area">
-        <h1>Bem-vindo ao iFood</h1>
-        <p>Encontre os melhores restaurantes, mercados e muito mais.</p>
-
-        {activeTab === "restaurantes" && (
-          <div>
-            {restaurants.length > 0 ? (
-              <div className="restaurants-grid">
-                {restaurants.map((restaurant) => (
-                  <div key={restaurant.id} className="restaurant-card">
-                    <img
-                      src={restaurant.image || "/placeholder.svg?height=150&width=250"}
-                      alt={restaurant.name}
-                      className="restaurant-card-image"
-                    />
-                    <h3>{restaurant.name}</h3>
-                    <div className="restaurant-card-details">
-                      <span>★ {restaurant.rating}</span>
-                      <span>{restaurant.category}</span>
-                      <span>{restaurant.deliveryTime}</span>
+        {activeTab === "restaurantes" ? (
+          <>
+            <div className="categories-section">
+              <h2 className="section-title">Categorias</h2>
+              <div className="categories-carousel">
+                <button className="carousel-arrow carousel-prev" id="category-prev-btn">
+                  <ChevronLeft size={24} />
+                </button>
+                <div
+                  className="categories-container"
+                  ref={categoriesContainerRef}
+                  style={{
+                    overflowX: "auto",
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                    WebkitOverflowScrolling: "touch",
+                    display: "flex",
+                  }}
+                >
+                  <div className="categories-items">
+                    <div className="category-item" onClick={() => handleCategoryClick("Lanches")}>
+                      <div className="category-icon">{getCategoryIcon("Lanches")}</div>
+                      <span className="category-name">Lanches</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Pizza")}>
+                      <div className="category-icon">{getCategoryIcon("Pizza")}</div>
+                      <span className="category-name">Pizza</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Doces & Bolos")}>
+                      <div className="category-icon">{getCategoryIcon("Doces & Bolos")}</div>
+                      <span className="category-name">Doces & Bolos</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Japonesa")}>
+                      <div className="category-icon">{getCategoryIcon("Japonesa")}</div>
+                      <span className="category-name">Japonesa</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Brasileira")}>
+                      <div className="category-icon">{getCategoryIcon("Brasileira")}</div>
+                      <span className="category-name">Brasileira</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Açaí")}>
+                      <div className="category-icon">{getCategoryIcon("Açaí")}</div>
+                      <span className="category-name">Açaí</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Árabe")}>
+                      <div className="category-icon">{getCategoryIcon("Árabe")}</div>
+                      <span className="category-name">Árabe</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Chinesa")}>
+                      <div className="category-icon">{getCategoryIcon("Chinesa")}</div>
+                      <span className="category-name">Chinesa</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Sorvetes")}>
+                      <div className="category-icon">{getCategoryIcon("Sorvetes")}</div>
+                      <span className="category-name">Sorvetes</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Italiana")}>
+                      <div className="category-icon">{getCategoryIcon("Italiana")}</div>
+                      <span className="category-name">Italiana</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Vegetariana")}>
+                      <div className="category-icon">{getCategoryIcon("Vegetariana")}</div>
+                      <span className="category-name">Vegetariana</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Carnes")}>
+                      <div className="category-icon">{getCategoryIcon("Carnes")}</div>
+                      <span className="category-name">Carnes</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Salgados")}>
+                      <div className="category-icon">{getCategoryIcon("Salgados")}</div>
+                      <span className="category-name">Salgados</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Gourmet")}>
+                      <div className="category-icon">{getCategoryIcon("Gourmet")}</div>
+                      <span className="category-name">Gourmet</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Marmita")}>
+                      <div className="category-icon">{getCategoryIcon("Marmita")}</div>
+                      <span className="category-name">Marmita</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Pastel")}>
+                      <div className="category-icon">{getCategoryIcon("Pastel")}</div>
+                      <span className="category-name">Pastel</span>
+                    </div>
+                    <div className="category-item" onClick={() => handleCategoryClick("Padarias")}>
+                      <div className="category-icon">{getCategoryIcon("Padarias")}</div>
+                      <span className="category-name">Padarias</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state-icon">
-                  <ShoppingBag size={48} />
                 </div>
-                <h2>Nenhum restaurante disponível</h2>
-                <p>Os restaurantes aparecerão aqui quando forem cadastrados.</p>
+                <button className="carousel-arrow carousel-next" id="category-next-btn">
+                  <ChevronRight size={24} />
+                </button>
               </div>
-            )}
+            </div>
+
+            {/* Free Delivery Products Carousel - APENAS para a aba Restaurantes */}
+            <div className="free-delivery-section">
+              <h2 className="section-title">Entrega Grátis</h2>
+              <div className="products-carousel">
+                <button className="carousel-arrow carousel-prev">
+                  <ChevronLeft size={24} />
+                </button>
+                <div className="products-container" ref={productsContainerRef}>
+                  {products.filter((p) => p.deliveryFee === "Grátis").length > 0 ? (
+                    <div className="products-items">
+                      {products
+                        .filter((p) => p.deliveryFee === "Grátis")
+                        .map((product) => (
+                          <div key={product.id} className="product-card">
+                            <div className="product-image">
+                              <img src={product.image || "/placeholder.svg?height=120&width=200"} alt={product.name} />
+                            </div>
+                            <div className="product-details">
+                              <h3 className="product-name">{product.name}</h3>
+                              <div className="product-restaurant">{product.restaurant}</div>
+                              <div className="product-price-row">
+                                <span className="product-price">{product.price}</span>
+                                <span className="delivery-badge">Grátis</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="empty-products">
+                      <p>Nenhum produto com entrega grátis disponível</p>
+                    </div>
+                  )}
+                </div>
+                <button className="carousel-arrow carousel-next">
+                  <ChevronRight size={24} />
+                </button>
+              </div>
+            </div>
+
+            {/* Restaurants Grid - APENAS para a aba Restaurantes */}
+            <div className="restaurants-section">
+              <h2 className="section-title">Lojas</h2>
+              {loading ? (
+                <div className="loading-state">
+                  <p>Carregando...</p>
+                </div>
+              ) : restaurants.length > 0 ? (
+                <div className="restaurants-grid">
+                  {restaurants.map((restaurant) => (
+                    <div key={restaurant.id} className="restaurant-card">
+                      <div className="restaurant-card-image-container">
+                        <img
+                          src={restaurant.image || "/placeholder.svg?height=150&width=250"}
+                          alt={restaurant.name}
+                          className="restaurant-card-image"
+                        />
+                        {restaurant.featured && <div className="featured-badge">Destaque</div>}
+                      </div>
+                      <div className="restaurant-card-content">
+                        <h3 className="restaurant-card-name">{restaurant.name}</h3>
+                        <div className="restaurant-card-info">
+                          <div className="restaurant-card-rating">
+                            <span className="star-icon">★</span>
+                            <span>{restaurant.rating}</span>
+                          </div>
+                          <span className="restaurant-card-category">{restaurant.category}</span>
+                          <span className="restaurant-card-distance">{restaurant.distance}</span>
+                        </div>
+                        <div className="restaurant-card-delivery">
+                          <span className="restaurant-card-time">{restaurant.deliveryTime}</span>
+                          <span className="restaurant-card-fee">
+                            {restaurant.deliveryFee === "Grátis" ? (
+                              <span className="free-delivery-text">Grátis</span>
+                            ) : (
+                              restaurant.deliveryFee
+                            )}
+                          </span>
+                        </div>
+                        {restaurant.coupon && (
+                          <div className="restaurant-card-coupon">
+                            <span className="coupon-icon">
+                              <Ticket size={14} />
+                            </span>
+                            <span className="coupon-text">{restaurant.coupon}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-state-icon">
+                    <ShoppingBag size={48} />
+                  </div>
+                  <h2>Nenhum restaurante disponível</h2>
+                  <p>Os restaurantes aparecerão aqui quando forem cadastrados.</p>
+                </div>
+              )}
+            </div>
+          </>
+        ) : activeTab === "inicio" ? (
+          <>
+            <h1>Bem-vindo ao iFood</h1>
+            <p>Encontre os melhores restaurantes, mercados e muito mais.</p>
+          </>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              {activeTab === "mercados" && <ShoppingCart size={48} />}
+              {activeTab === "bebidas" && <Beer size={48} />}
+              {activeTab === "farmacias" && (
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <path d="M12 8v8"></path>
+                  <path d="M8 12h8"></path>
+                </svg>
+              )}
+              {activeTab === "pets" && (
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"></path>
+                  <path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5"></path>
+                  <path d="M8 14v.5"></path>
+                  <path d="M16 14v.5"></path>
+                  <path d="M11.25 16.25h1.5L12 17l-.75-.75Z"></path>
+                  <path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444c0-1.061-.162-2.2-.493-3.309m-9.243-6.082A8.801 8.801 0 0 1 12 5c.78 0 1.5.108 2.161.306"></path>
+                </svg>
+              )}
+              {activeTab === "shopping" && (
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+                  <path d="M3 6h18"></path>
+                  <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+              )}
+            </div>
+            <h2>Conteúdo de {activeTab} em breve</h2>
+            <p>Esta seção está em desenvolvimento.</p>
           </div>
         )}
       </div>
@@ -1166,3 +1612,8 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
 }
 
 export default HomePage
+
+
+
+
+
