@@ -16,6 +16,7 @@ async function cadastrar(restaurante) {
     const sqlRestaurante = `
             INSERT INTO Restaurante(
                 nome_restaurante, 
+                categoria,
                 cnpj, 
                 telefone, 
                 email, 
@@ -37,12 +38,13 @@ async function cadastrar(restaurante) {
                 senha,
                 ativo
             ) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) 
             RETURNING *
         `
 
     const valuesRestaurante = [
       restaurante.nomeRestaurante,
+      restaurante.categoria || "Restaurante",
       restaurante.cnpj,
       restaurante.telefone,
       restaurante.email,
@@ -62,7 +64,7 @@ async function cadastrar(restaurante) {
       restaurante.conta,
       restaurante.tipoConta,
       senhaHash,
-      false, // Inicialmente inativo até aprovação
+      true, // Ativo por padrão
     ]
 
     const result = await client.query(sqlRestaurante, valuesRestaurante)
@@ -75,39 +77,81 @@ async function cadastrar(restaurante) {
     // Reverter transação em caso de erro
     await client.query("ROLLBACK")
     throw error
+  } finally {
+    client.end()
   }
 }
 
 // Listar todos os restaurantes
 async function listarTodos() {
   const client = await connect()
-  const sql = "SELECT * FROM Restaurante ORDER BY nome_restaurante"
-  const result = await client.query(sql)
-  return result.rows
+  try {
+    const sql = "SELECT * FROM Restaurante ORDER BY nome_restaurante"
+    const result = await client.query(sql)
+    return result.rows
+  } finally {
+    client.end()
+  }
+}
+
+// Listar apenas restaurantes ativos
+async function listarAtivos() {
+  const client = await connect()
+  try {
+    const sql = "SELECT * FROM Restaurante WHERE ativo = true ORDER BY nome_restaurante"
+    const result = await client.query(sql)
+    return result.rows
+  } finally {
+    client.end()
+  }
 }
 
 // Buscar restaurante por ID
 async function buscarPorId(id) {
   const client = await connect()
-  const sql = "SELECT * FROM Restaurante WHERE id = $1"
-  const result = await client.query(sql, [id])
-  return result.rows[0]
+  try {
+    const sql = "SELECT * FROM Restaurante WHERE id = $1"
+    const result = await client.query(sql, [id])
+    return result.rows[0]
+  } finally {
+    client.end()
+  }
 }
 
 // Buscar restaurante por CNPJ
 async function buscarPorCnpj(cnpj) {
   const client = await connect()
-  const sql = "SELECT * FROM Restaurante WHERE cnpj = $1"
-  const result = await client.query(sql, [cnpj])
-  return result.rows[0]
+  try {
+    const sql = "SELECT * FROM Restaurante WHERE cnpj = $1"
+    const result = await client.query(sql, [cnpj])
+    return result.rows[0]
+  } finally {
+    client.end()
+  }
 }
 
 // Buscar restaurante por e-mail
 async function buscarPorEmail(email) {
   const client = await connect()
-  const sql = "SELECT * FROM Restaurante WHERE email = $1"
-  const result = await client.query(sql, [email])
-  return result.rows[0]
+  try {
+    const sql = "SELECT * FROM Restaurante WHERE email = $1"
+    const result = await client.query(sql, [email])
+    return result.rows[0]
+  } finally {
+    client.end()
+  }
+}
+
+// Buscar restaurantes por categoria
+async function buscarPorCategoria(categoria) {
+  const client = await connect()
+  try {
+    const sql = "SELECT * FROM Restaurante WHERE categoria ILIKE $1 AND ativo = true ORDER BY nome_restaurante"
+    const result = await client.query(sql, [`%${categoria}%`])
+    return result.rows
+  } finally {
+    client.end()
+  }
 }
 
 // Atualizar restaurante
@@ -124,39 +168,42 @@ async function atualizar(id, restaurante) {
     if (restaurante.senha && restaurante.senha.trim() !== "") {
       senhaHash = await bcrypt.hash(restaurante.senha, 10)
     } else {
-      // Se não foi fornecida, manter a senha atual
-      const restauranteAtual = await buscarPorId(id)
-      senhaHash = restauranteAtual.senha
+      // Se não foi fornecida, buscar a senha atual
+      const sqlSenhaAtual = "SELECT senha FROM Restaurante WHERE id = $1"
+      const resultSenha = await client.query(sqlSenhaAtual, [id])
+      senhaHash = resultSenha.rows[0]?.senha || restaurante.senha
     }
 
     // Atualizar dados do restaurante
     const sqlRestaurante = `
             UPDATE Restaurante SET
                 nome_restaurante = $1, 
-                cnpj = $2, 
-                telefone = $3, 
-                email = $4, 
-                cep = $5, 
-                rua = $6, 
-                numero = $7, 
-                complemento = $8, 
-                bairro = $9, 
-                cidade = $10, 
-                estado = $11, 
-                nome_responsavel = $12, 
-                cpf_responsavel = $13, 
-                telefone_responsavel = $14, 
-                email_responsavel = $15, 
-                banco = $16, 
-                agencia = $17, 
-                conta = $18, 
-                tipo_conta = $19, 
-                senha = $20
-            WHERE id = $21
+                categoria = $2,
+                cnpj = $3, 
+                telefone = $4, 
+                email = $5, 
+                cep = $6, 
+                rua = $7, 
+                numero = $8, 
+                complemento = $9, 
+                bairro = $10, 
+                cidade = $11, 
+                estado = $12, 
+                nome_responsavel = $13, 
+                cpf_responsavel = $14, 
+                telefone_responsavel = $15, 
+                email_responsavel = $16, 
+                banco = $17, 
+                agencia = $18, 
+                conta = $19, 
+                tipo_conta = $20, 
+                senha = $21
+            WHERE id = $22
         `
 
     const valuesRestaurante = [
       restaurante.nomeRestaurante,
+      restaurante.categoria || "Restaurante",
       restaurante.cnpj,
       restaurante.telefone,
       restaurante.email,
@@ -187,44 +234,59 @@ async function atualizar(id, restaurante) {
     // Reverter transação em caso de erro
     await client.query("ROLLBACK")
     throw error
+  } finally {
+    client.end()
   }
 }
 
 // Alterar status do restaurante (ativar/desativar)
 async function alterarStatus(id, ativo) {
   const client = await connect()
-  const sql = "UPDATE Restaurante SET ativo = $1 WHERE id = $2"
-  await client.query(sql, [ativo, id])
+  try {
+    const sql = "UPDATE Restaurante SET ativo = $1 WHERE id = $2"
+    await client.query(sql, [ativo, id])
+  } finally {
+    client.end()
+  }
 }
 
 // Autenticar restaurante (login)
 async function autenticar(email, senha) {
   const client = await connect()
-  const sql = "SELECT * FROM Restaurante WHERE email = $1"
-  const result = await client.query(sql, [email])
+  try {
+    const sql = "SELECT * FROM Restaurante WHERE email = $1"
+    const result = await client.query(sql, [email])
 
-  const restaurante = result.rows[0]
+    const restaurante = result.rows[0]
 
-  if (!restaurante) {
-    return null
+    if (!restaurante) {
+      return null
+    }
+
+    const senhaCorreta = await bcrypt.compare(senha, restaurante.senha)
+
+    if (!senhaCorreta) {
+      return null
+    }
+
+    return restaurante
+  } finally {
+    client.end()
   }
-
-  const senhaCorreta = await bcrypt.compare(senha, restaurante.senha)
-
-  if (!senhaCorreta) {
-    return null
-  }
-
-  return restaurante
 }
 
 module.exports = {
   cadastrar,
   listarTodos,
+  listarAtivos,
   buscarPorId,
   buscarPorCnpj,
   buscarPorEmail,
+  buscarPorCategoria,
   atualizar,
   alterarStatus,
   autenticar,
 }
+
+
+

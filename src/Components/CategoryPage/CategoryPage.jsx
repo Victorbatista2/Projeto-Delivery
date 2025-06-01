@@ -9,7 +9,7 @@ const CategoryPage = () => {
   const { category } = useParams()
   const navigate = useNavigate()
   const [restaurants, setRestaurants] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState([])
   const [notifications, setNotifications] = useState(0)
   const [cartItems, setCartItems] = useState(0)
@@ -29,19 +29,50 @@ const CategoryPage = () => {
   // Buscar restaurantes da categoria
   useEffect(() => {
     const fetchRestaurants = async () => {
+      if (!categoryName) return
+
       setLoading(true)
       try {
-        // Buscar restaurantes da API
-        const response = await fetch(`http://localhost:3001/api/restaurants?category=${categoryName}`)
-        const data = await response.json()
+        console.log(`Buscando restaurantes da categoria: ${categoryName}`)
 
-        if (data && Array.isArray(data)) {
-          setRestaurants(data)
-        } else {
-          setRestaurants([])
+        // Função para fazer requisição com retry automático
+        const fetchWithRetry = async (url, maxRetries = 3) => {
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              const controller = new AbortController()
+              const timeoutId = setTimeout(() => controller.abort(), 8000)
+
+              const response = await fetch(url, {
+                signal: controller.signal,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              })
+
+              clearTimeout(timeoutId)
+
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+              }
+
+              const data = await response.json()
+              return Array.isArray(data) ? data : []
+            } catch (error) {
+              console.warn(`Tentativa ${attempt}/${maxRetries} falhou:`, error.message)
+              if (attempt === maxRetries) throw error
+              await new Promise((resolve) => setTimeout(resolve, 1000 * attempt))
+            }
+          }
         }
+
+        const data = await fetchWithRetry(
+          `http://localhost:3001/api/restaurantes/categoria/${encodeURIComponent(categoryName)}`,
+        )
+
+        console.log(`${data.length} restaurantes encontrados para ${categoryName}`)
+        setRestaurants(data)
       } catch (error) {
-        console.error("Erro ao buscar restaurantes:", error)
+        console.error("Erro ao buscar restaurantes da categoria:", error)
         setRestaurants([])
       } finally {
         setLoading(false)
@@ -49,7 +80,7 @@ const CategoryPage = () => {
     }
 
     fetchRestaurants()
-  }, [category, categoryName])
+  }, [categoryName])
 
   // Formatar o endereço para exibição
   const formatAddressForDisplay = (address) => {
@@ -219,3 +250,7 @@ const CategoryPage = () => {
 }
 
 export default CategoryPage
+
+
+
+

@@ -1,141 +1,202 @@
 const restauranteModel = require("../models/restauranteModel")
 
-// Cadastrar novo restaurante
-exports.cadastrarRestaurante = async (req, res) => {
-  try {
-    const dadosRestaurante = req.body
-
-    // Verificar se o CNPJ já está cadastrado
-    const cnpjExistente = await restauranteModel.buscarPorCnpj(dadosRestaurante.cnpj)
-    if (cnpjExistente) {
-      return res.status(400).json({ message: "CNPJ já cadastrado no sistema" })
+const restauranteController = {
+  // Cadastrar restaurante
+  cadastrar: async (req, res) => {
+    try {
+      console.log("Dados recebidos para cadastro:", req.body)
+      const resultado = await restauranteModel.cadastrar(req.body)
+      res.status(201).json({
+        success: true,
+        message: "Restaurante cadastrado com sucesso!",
+        data: resultado,
+      })
+    } catch (error) {
+      console.error("Erro ao cadastrar restaurante:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao cadastrar restaurante",
+        error: error.message,
+      })
     }
+  },
 
-    // Verificar se o e-mail já está cadastrado
-    const emailExistente = await restauranteModel.buscarPorEmail(dadosRestaurante.email)
-    if (emailExistente) {
-      return res.status(400).json({ message: "E-mail já cadastrado no sistema" })
+  // Login do restaurante
+  login: async (req, res) => {
+    try {
+      const { email, senha } = req.body
+      const resultado = await restauranteModel.autenticar(email, senha)
+      if (!resultado) {
+        return res.status(401).json({
+          success: false,
+          message: "Credenciais inválidas",
+        })
+      }
+      res.json({
+        success: true,
+        message: "Login realizado com sucesso!",
+        data: resultado,
+      })
+    } catch (error) {
+      console.error("Erro no login:", error)
+      res.status(401).json({
+        success: false,
+        message: "Credenciais inválidas",
+        error: error.message,
+      })
     }
+  },
 
-    // Cadastrar o restaurante
-    const novoRestaurante = await restauranteModel.cadastrar(dadosRestaurante)
+  // Listar todos os restaurantes ativos
+  listarTodos: async (req, res) => {
+    try {
+      console.log("=== INICIANDO BUSCA DE RESTAURANTES ===")
+      console.log("Timestamp:", new Date().toISOString())
 
-    res.status(201).json({
-      message: "Restaurante cadastrado com sucesso",
-      restaurante: {
-        id: novoRestaurante.id,
-        nome: novoRestaurante.nomeRestaurante,
-        email: novoRestaurante.email,
-      },
-    })
-  } catch (error) {
-    console.error("Erro ao cadastrar restaurante:", error)
-    res.status(500).json({ message: "Erro ao cadastrar restaurante", error: error.message })
-  }
-}
+      const restaurantes = await restauranteModel.listarAtivos()
+      console.log(`Restaurantes encontrados no banco: ${restaurantes.length}`)
 
-// Listar todos os restaurantes
-exports.listarRestaurantes = async (req, res) => {
-  try {
-    const restaurantes = await restauranteModel.listarTodos()
-    res.json(restaurantes)
-  } catch (error) {
-    console.error("Erro ao listar restaurantes:", error)
-    res.status(500).json({ message: "Erro ao listar restaurantes", error: error.message })
-  }
-}
+      if (restaurantes.length > 0) {
+        console.log("Primeiro restaurante:", restaurantes[0])
+      }
 
-// Buscar restaurante por ID
-exports.buscarRestaurantePorId = async (req, res) => {
-  try {
-    const { id } = req.params
-    const restaurante = await restauranteModel.buscarPorId(id)
-
-    if (!restaurante) {
-      return res.status(404).json({ message: "Restaurante não encontrado" })
-    }
-
-    res.json(restaurante)
-  } catch (error) {
-    console.error("Erro ao buscar restaurante:", error)
-    res.status(500).json({ message: "Erro ao buscar restaurante", error: error.message })
-  }
-}
-
-// Atualizar restaurante
-exports.atualizarRestaurante = async (req, res) => {
-  try {
-    const { id } = req.params
-    const dadosRestaurante = req.body
-
-    // Verificar se o restaurante existe
-    const restauranteExistente = await restauranteModel.buscarPorId(id)
-    if (!restauranteExistente) {
-      return res.status(404).json({ message: "Restaurante não encontrado" })
-    }
-
-    // Atualizar o restaurante
-    await restauranteModel.atualizar(id, dadosRestaurante)
-
-    res.json({ message: "Restaurante atualizado com sucesso" })
-  } catch (error) {
-    console.error("Erro ao atualizar restaurante:", error)
-    res.status(500).json({ message: "Erro ao atualizar restaurante", error: error.message })
-  }
-}
-
-// Alterar status do restaurante (ativar/desativar)
-exports.alterarStatusRestaurante = async (req, res) => {
-  try {
-    const { id } = req.params
-    const { ativo } = req.body
-
-    // Verificar se o restaurante existe
-    const restauranteExistente = await restauranteModel.buscarPorId(id)
-    if (!restauranteExistente) {
-      return res.status(404).json({ message: "Restaurante não encontrado" })
-    }
-
-    // Atualizar o status do restaurante
-    await restauranteModel.alterarStatus(id, ativo)
-
-    const statusMsg = ativo ? "ativado" : "desativado"
-    res.json({ message: `Restaurante ${statusMsg} com sucesso` })
-  } catch (error) {
-    console.error("Erro ao alterar status do restaurante:", error)
-    res.status(500).json({ message: "Erro ao alterar status do restaurante", error: error.message })
-  }
-}
-
-// Login do restaurante
-exports.loginRestaurante = async (req, res) => {
-  try {
-    const { email, senha } = req.body
-
-    if (!email || !senha) {
-      return res.status(400).json({ message: "E-mail e senha são obrigatórios" })
-    }
-
-    const restaurante = await restauranteModel.autenticar(email, senha)
-
-    if (!restaurante) {
-      return res.status(401).json({ message: "Credenciais inválidas" })
-    }
-
-    if (!restaurante.ativo) {
-      return res.status(403).json({ message: "Restaurante inativo. Entre em contato com o suporte." })
-    }
-
-    res.json({
-      message: "Login bem-sucedido",
-      restaurante: {
+      // Formatar dados para o frontend
+      const restaurantesFormatados = restaurantes.map((restaurante) => ({
         id: restaurante.id,
-        nome: restaurante.nomeRestaurante,
-        email: restaurante.email,
-      },
-    })
-  } catch (error) {
-    console.error("Erro no login do restaurante:", error)
-    res.status(500).json({ message: "Erro no login", error: error.message })
-  }
+        name: restaurante.nome_restaurante,
+        category: restaurante.categoria || "Restaurante",
+        rating: "4.5",
+        distance: "2.5 km",
+        deliveryTime: "30-45 min",
+        deliveryFee: "Grátis",
+        image: "/placeholder.svg?height=150&width=250",
+        featured: false,
+        coupon: null,
+      }))
+
+      console.log(`Enviando ${restaurantesFormatados.length} restaurantes formatados`)
+      console.log("=== FIM DA BUSCA DE RESTAURANTES ===")
+
+      res.json(restaurantesFormatados)
+    } catch (error) {
+      console.error("=== ERRO AO LISTAR RESTAURANTES ===")
+      console.error("Erro completo:", error)
+      console.error("Stack trace:", error.stack)
+
+      res.status(500).json({
+        success: false,
+        message: "Erro ao buscar restaurantes",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      })
+    }
+  },
+
+  // Buscar por categoria
+  buscarPorCategoria: async (req, res) => {
+    try {
+      const { categoria } = req.params
+      console.log(`=== BUSCANDO CATEGORIA: ${categoria} ===`)
+      console.log("Timestamp:", new Date().toISOString())
+
+      const restaurantes = await restauranteModel.buscarPorCategoria(categoria)
+      console.log(`Restaurantes encontrados para categoria ${categoria}: ${restaurantes.length}`)
+
+      // Formatar dados para o frontend
+      const restaurantesFormatados = restaurantes.map((restaurante) => ({
+        id: restaurante.id,
+        name: restaurante.nome_restaurante,
+        category: restaurante.categoria || "Restaurante",
+        rating: "4.5",
+        distance: "2.5 km",
+        deliveryTime: "30-45 min",
+        deliveryFee: "Grátis",
+        image: "/placeholder.svg?height=150&width=250",
+        featured: false,
+        coupon: null,
+      }))
+
+      console.log(`Enviando ${restaurantesFormatados.length} restaurantes da categoria ${categoria}`)
+      console.log("=== FIM DA BUSCA POR CATEGORIA ===")
+
+      res.json(restaurantesFormatados)
+    } catch (error) {
+      console.error(`=== ERRO AO BUSCAR CATEGORIA ${req.params.categoria} ===`)
+      console.error("Erro completo:", error)
+      console.error("Stack trace:", error.stack)
+
+      res.status(500).json({
+        success: false,
+        message: "Erro ao buscar restaurantes por categoria",
+        error: error.message,
+        categoria: req.params.categoria,
+        timestamp: new Date().toISOString(),
+      })
+    }
+  },
+
+  // Buscar por ID
+  buscarPorId: async (req, res) => {
+    try {
+      const { id } = req.params
+      const restaurante = await restauranteModel.buscarPorId(id)
+      if (!restaurante) {
+        return res.status(404).json({
+          success: false,
+          message: "Restaurante não encontrado",
+        })
+      }
+      res.json({
+        success: true,
+        data: restaurante,
+      })
+    } catch (error) {
+      console.error("Erro ao buscar restaurante:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao buscar restaurante",
+        error: error.message,
+      })
+    }
+  },
+
+  // Atualizar restaurante
+  atualizar: async (req, res) => {
+    try {
+      const { id } = req.params
+      await restauranteModel.atualizar(id, req.body)
+      res.json({
+        success: true,
+        message: "Restaurante atualizado com sucesso!",
+      })
+    } catch (error) {
+      console.error("Erro ao atualizar restaurante:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao atualizar restaurante",
+        error: error.message,
+      })
+    }
+  },
+
+  // Deletar restaurante
+  deletar: async (req, res) => {
+    try {
+      const { id } = req.params
+      await restauranteModel.alterarStatus(id, false)
+      res.json({
+        success: true,
+        message: "Restaurante desativado com sucesso!",
+      })
+    } catch (error) {
+      console.error("Erro ao desativar restaurante:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao desativar restaurante",
+        error: error.message,
+      })
+    }
+  },
 }
+
+module.exports = restauranteController

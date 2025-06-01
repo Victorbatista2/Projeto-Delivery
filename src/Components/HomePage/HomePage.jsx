@@ -28,6 +28,7 @@ import {
   Apple,
   Beer,
   Sandwich,
+  LogOut,
 } from "lucide-react"
 
 const getCategoryIcon = (category) => {
@@ -86,18 +87,18 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
   const [cartItems, setCartItems] = useState(0)
   const [cartTotal, setCartTotal] = useState(0)
   const [notifications, setNotifications] = useState(0)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const searchRef = useRef(null)
 
   // Restaurantes e produtos
   const [restaurants, setRestaurants] = useState([])
   const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [initialLoad, setInitialLoad] = useState(true)
 
   // Estados para o modal de endereço
   const [showAddressModal, setShowAddressModal] = useState(false)
-  const [addressModalStep, setAddressModalStep] = useState(1) // 1: lista, 2: busca, 3: formulário
-  const [savedAddresses, setSavedAddresses] = useState([])
-  const [selectedAddress, setSelectedAddress] = useState(null)
+  const [addressModalStep, setAddressModalStep] = useState(1)
   const [addressSearchQuery, setAddressSearchQuery] = useState("")
   const [addressSuggestions, setAddressSuggestions] = useState([])
   const [newAddress, setNewAddress] = useState({
@@ -125,6 +126,57 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
   const categoriesContainerRef = useRef(null)
   const productsContainerRef = useRef(null)
 
+  // Update the address-related state initialization
+  const [savedAddresses, setSavedAddresses] = useState([])
+  const [selectedAddress, setSelectedAddress] = useState(null)
+  const [loadingAddresses, setLoadingAddresses] = useState(false)
+
+  // Ref para evitar múltiplas chamadas simultâneas
+  const loadingRef = useRef(false)
+
+  // Add function to load addresses from backend
+  const loadUserAddresses = useCallback(async () => {
+    if (!user?.id) return
+
+    setLoadingAddresses(true)
+    try {
+      const response = await fetch(`http://localhost:3001/api/enderecos/usuario/${user.id}`)
+      const data = await response.json()
+
+      if (data.success && data.data) {
+        const formattedAddresses = data.data.map((addr) => ({
+          id: addr.id,
+          label: addr.rotulo,
+          street: addr.rua,
+          number: addr.numero,
+          complement: addr.complemento,
+          neighborhood: addr.bairro,
+          city: addr.cidade,
+          state: addr.estado,
+          zipCode: addr.cep,
+          isDefault: addr.padrao,
+        }))
+
+        setSavedAddresses(formattedAddresses)
+
+        // Set default address as selected
+        const defaultAddress = formattedAddresses.find((addr) => addr.isDefault)
+        if (defaultAddress && !selectedAddress) {
+          setSelectedAddress(defaultAddress)
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar endereços:", error)
+    } finally {
+      setLoadingAddresses(false)
+    }
+  }, [user?.id, selectedAddress])
+
+  // Load addresses when component mounts or user changes
+  useEffect(() => {
+    loadUserAddresses()
+  }, [loadUserAddresses])
+
   // Adicionar uma nova função para lidar com o clique na categoria
   const handleCategoryClick = (category) => {
     // Redirecionar para a página da categoria
@@ -142,102 +194,143 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
     })
   }
 
-  // Add this function to fetch restaurants and products
-  const fetchData = useCallback(async () => {
-    setLoading(true)
-    try {
-      // Fetch restaurants from your API
-      const restaurantsResponse = await fetch("http://localhost:3001/api/restaurants")
-      const restaurantsData = await restaurantsResponse.json()
+  // Função melhorada para carregar dados com cache automático
+  const loadData = useCallback(async () => {
+    // Evitar múltiplas chamadas simultâneas
+    if (loadingRef.current) {
+      console.log("Carregamento já em andamento, ignorando...")
+      return
+    }
 
-      if (restaurantsData && Array.isArray(restaurantsData)) {
-        setRestaurants(restaurantsData)
+    loadingRef.current = true
+    setLoading(true)
+
+    try {
+      console.log("Iniciando carregamento de dados...")
+
+      // Função para fazer requisição com retry automático
+      const fetchWithRetry = async (url, maxRetries = 3) => {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 8000)
+
+            const response = await fetch(url, {
+              signal: controller.signal,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            })
+
+            clearTimeout(timeoutId)
+
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+            }
+
+            const data = await response.json()
+            return Array.isArray(data) ? data : []
+          } catch (error) {
+            console.warn(`Tentativa ${attempt}/${maxRetries} falhou:`, error.message)
+            if (attempt === maxRetries) throw error
+            await new Promise((resolve) => setTimeout(resolve, 1000 * attempt))
+          }
+        }
       }
 
-      // Fetch products from your API
-      const productsResponse = await fetch("http://localhost:3001/api/products")
-      const productsData = await productsResponse.json()
+      // Carregar restaurantes e produtos em paralelo
+      const [restaurantsResult, productsResult] = await Promise.allSettled([
+        fetchWithRetry("http://localhost:3001/api/restaurantes"),
+        fetchWithRetry("http://localhost:3001/api/products"),
+      ])
 
-      if (productsData && Array.isArray(productsData)) {
-        setProducts(productsData)
+      // Processar resultados dos restaurantes
+      if (restaurantsResult.status === "fulfilled") {
+        const restaurants = restaurantsResult.value || []
+        console.log(`${restaurants.length} restaurantes carregados`)
+        setRestaurants(restaurants)
+      } else {
+        console.error("Erro ao carregar restaurantes:", restaurantsResult.reason)
+        setRestaurants([])
+      }
+
+      // Processar resultados dos produtos
+      if (productsResult.status === "fulfilled") {
+        const products = productsResult.value || []
+        console.log(`${products.length} produtos carregados`)
+        setProducts(products)
+      } else {
+        console.error("Erro ao carregar produtos:", productsResult.reason)
+        setProducts([])
       }
     } catch (error) {
-      console.error("Error fetching data:", error)
-      // Initialize with empty arrays if fetch fails
+      console.error("Erro geral no carregamento:", error)
       setRestaurants([])
       setProducts([])
     } finally {
       setLoading(false)
+      setInitialLoad(false)
+      loadingRef.current = false
+      console.log("Carregamento finalizado")
     }
   }, [])
 
-  // Add this useEffect to fetch data on component mount
+  // Carregar dados quando o componente monta
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    console.log("Componente HomePage montado")
+    loadData()
+  }, [loadData])
+
+  // Pré-carregar dados quando a aba restaurantes é ativada
+  useEffect(() => {
+    if (activeTab === "restaurantes" && restaurants.length === 0 && !loading && !loadingRef.current) {
+      console.log("Aba restaurantes ativada, carregando dados...")
+      loadData()
+    }
+  }, [activeTab, restaurants.length, loading, loadData])
 
   // Substitua o useEffect para os botões do carrossel pelo código abaixo
   // Localizar o useEffect que começa com:
   // useEffect(() => {
   //   const handleCategoryPrev = () => {
   // E substitua todo o bloco
+  // Simplified carousel effect without dependencies that could cause infinite loops
   useEffect(() => {
-    // Funções para lidar com o scroll do carrossel
     const handleCategoryPrev = () => {
       if (categoriesContainerRef.current) {
-        categoriesContainerRef.current.scrollBy({
-          left: -300,
-          behavior: "smooth",
-        })
+        categoriesContainerRef.current.scrollBy({ left: -300, behavior: "smooth" })
       }
     }
 
     const handleCategoryNext = () => {
       if (categoriesContainerRef.current) {
-        categoriesContainerRef.current.scrollBy({
-          left: 300,
-          behavior: "smooth",
-        })
+        categoriesContainerRef.current.scrollBy({ left: 300, behavior: "smooth" })
       }
     }
 
     const handleProductsPrev = () => {
       if (productsContainerRef.current) {
-        productsContainerRef.current.scrollBy({
-          left: -300,
-          behavior: "smooth",
-        })
+        productsContainerRef.current.scrollBy({ left: -300, behavior: "smooth" })
       }
     }
 
     const handleProductsNext = () => {
       if (productsContainerRef.current) {
-        productsContainerRef.current.scrollBy({
-          left: 300,
-          behavior: "smooth",
-        })
+        productsContainerRef.current.scrollBy({ left: 300, behavior: "smooth" })
       }
     }
 
-    // Selecionar os botões do carrossel
+    // Add event listeners only once
     const categoryPrevBtn = document.getElementById("category-prev-btn")
     const categoryNextBtn = document.getElementById("category-next-btn")
     const productsPrevBtn = document.querySelector(".free-delivery-section .carousel-prev")
     const productsNextBtn = document.querySelector(".free-delivery-section .carousel-next")
 
-    // Adicionar event listeners
     if (categoryPrevBtn) categoryPrevBtn.addEventListener("click", handleCategoryPrev)
     if (categoryNextBtn) categoryNextBtn.addEventListener("click", handleCategoryNext)
     if (productsPrevBtn) productsPrevBtn.addEventListener("click", handleProductsPrev)
     if (productsNextBtn) productsNextBtn.addEventListener("click", handleProductsNext)
 
-    // Verificar se todas as categorias estão sendo renderizadas
-    console.log(
-      "Categorias renderizadas:",
-      Array.from(document.querySelectorAll(".category-name")).map((el) => el.textContent),
-    )
-
-    // Limpar event listeners
     return () => {
       if (categoryPrevBtn) categoryPrevBtn.removeEventListener("click", handleCategoryPrev)
       if (categoryNextBtn) categoryNextBtn.removeEventListener("click", handleCategoryNext)
@@ -255,25 +348,37 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
   }, [])
 
   // Adicionar a função para excluir um endereço
-  const deleteAddress = (addressId, e) => {
-    e.stopPropagation() // Evitar que o clique propague para o item do endereço
+  const deleteAddress = async (addressId, e) => {
+    e.stopPropagation()
 
-    // Confirmar antes de excluir
-    if (window.confirm("Tem certeza que deseja excluir este endereço?")) {
-      // Remover o endereço da lista
-      const updatedAddresses = savedAddresses.filter((addr) => addr.id !== addressId)
-      setSavedAddresses(updatedAddresses)
+    if (!window.confirm("Tem certeza que deseja excluir este endereço?")) {
+      return
+    }
 
-      // Se o endereço excluído for o selecionado, limpar a seleção ou selecionar outro
-      if (selectedAddress && selectedAddress.id === addressId) {
-        // Se houver outro endereço, selecionar o primeiro (ou o padrão, se existir)
-        if (updatedAddresses.length > 0) {
-          const defaultAddress = updatedAddresses.find((addr) => addr.isDefault)
-          setSelectedAddress(defaultAddress || updatedAddresses[0])
-        } else {
-          setSelectedAddress(null)
-        }
+    if (!user?.id) {
+      alert("Usuário não encontrado. Faça login novamente.")
+      return
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/enderecos/${addressId}/usuario/${user.id}`, {
+        method: "DELETE",
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Erro ao excluir endereço")
       }
+
+      if (data.success) {
+        // Reload addresses from backend
+        await loadUserAddresses()
+        alert("Endereço excluído com sucesso!")
+      }
+    } catch (error) {
+      console.error("Erro ao excluir endereço:", error)
+      alert("Erro ao excluir endereço: " + error.message)
     }
   }
 
@@ -400,13 +505,18 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
       ) {
         setShowCart(false)
       }
+
+      // Fechar menu do usuário quando clicar fora
+      if (showUserMenu && !event.target.closest(".user-menu-container")) {
+        setShowUserMenu(false)
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [searchRef, showCart])
+  }, [searchRef, showCart, showUserMenu])
 
   // Carregar o script do Google Maps
   useEffect(() => {
@@ -517,45 +627,65 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
   }
 
   // Salvar o novo endereço
-  const saveNewAddress = () => {
-    const addressToSave = {
-      ...newAddress,
-      id: Date.now(), // Usar timestamp como ID temporário
+  const saveNewAddress = async () => {
+    if (!user?.id) {
+      alert("Usuário não encontrado. Faça login novamente.")
+      return
     }
 
-    // Se o endereço for definido como padrão, atualizar os outros endereços
-    if (addressToSave.isDefault) {
-      const updatedAddresses = savedAddresses.map((addr) => ({
-        ...addr,
-        isDefault: false,
-      }))
-      setSavedAddresses([...updatedAddresses, addressToSave])
-    } else {
-      // Se for o primeiro endereço, definir como padrão automaticamente
-      if (savedAddresses.length === 0) {
-        addressToSave.isDefault = true
+    try {
+      const addressData = {
+        rotulo: newAddress.label || "Endereço",
+        rua: newAddress.street,
+        numero: newAddress.number,
+        complemento: newAddress.complement,
+        bairro: newAddress.neighborhood,
+        cidade: newAddress.city,
+        estado: newAddress.state,
+        cep: newAddress.zipCode,
+        padrao: newAddress.isDefault,
       }
-      setSavedAddresses([...savedAddresses, addressToSave])
+
+      const response = await fetch(`http://localhost:3001/api/enderecos/usuario/${user.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(addressData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Erro ao salvar endereço")
+      }
+
+      if (data.success) {
+        // Reload addresses from backend
+        await loadUserAddresses()
+
+        // Reset form and close modal
+        setNewAddress({
+          label: "",
+          street: "",
+          number: "",
+          complement: "",
+          neighborhood: "",
+          city: "",
+          state: "",
+          zipCode: "",
+          isDefault: false,
+        })
+
+        setShowAddressModal(false)
+        setAddressModalStep(1)
+
+        alert("Endereço salvo com sucesso!")
+      }
+    } catch (error) {
+      console.error("Erro ao salvar endereço:", error)
+      alert("Erro ao salvar endereço: " + error.message)
     }
-
-    // Selecionar o novo endereço
-    setSelectedAddress(addressToSave)
-
-    // Resetar o formulário e fechar o modal
-    setNewAddress({
-      label: "",
-      street: "",
-      number: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      isDefault: false,
-    })
-
-    setShowAddressModal(false)
-    setAddressModalStep(1)
   }
 
   // Selecionar um endereço salvo
@@ -565,18 +695,30 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
   }
 
   // Definir um endereço como padrão
-  const setAddressAsDefault = (addressId) => {
-    const updatedAddresses = savedAddresses.map((addr) => ({
-      ...addr,
-      isDefault: addr.id === addressId,
-    }))
+  const setAddressAsDefault = async (addressId) => {
+    if (!user?.id) {
+      alert("Usuário não encontrado. Faça login novamente.")
+      return
+    }
 
-    setSavedAddresses(updatedAddresses)
+    try {
+      const response = await fetch(`http://localhost:3001/api/enderecos/${addressId}/usuario/${user.id}/padrao`, {
+        method: "PATCH",
+      })
 
-    // Atualizar o endereço selecionado se necessário
-    const defaultAddress = updatedAddresses.find((addr) => addr.id === addressId)
-    if (defaultAddress) {
-      setSelectedAddress(defaultAddress)
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Erro ao definir endereço padrão")
+      }
+
+      if (data.success) {
+        // Reload addresses from backend
+        await loadUserAddresses()
+      }
+    } catch (error) {
+      console.error("Erro ao definir endereço padrão:", error)
+      alert("Erro ao definir endereço padrão: " + error.message)
     }
   }
 
@@ -758,27 +900,12 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
     return calculateSubtotal() + deliveryFee
   }
 
-  // Function to get the category icon
-  // const getCategoryIcon = (category) => {
-  //   switch (category) {
-  //     case "Fast Food":
-  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>; // Example: Burger icon
-  //     case "Pizza":
-  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2z"></path><path d="M12 18L12 8"></path></svg>; // Example: Pizza slice icon
-  //     case "Sandwich":
-  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"></rect><line x1="2" y1="9" x2="22" y2="9"></line></svg>; // Example: Sandwich icon
-  //     case "Fried Chicken":
-  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 0 1 2.59 7.59"></path><path d="M5.64 6.64a9 9 0 0 0-2.59 7.59"></path><line x1="8" y1="6" x2="8" y2="2"></line><line x1="16" y1="6" x2="16" y2="2"></line><rect x="2" y="14" width="20" height="8" rx="2"></rect></svg>; // Example: Chicken icon
-  //     case "Mexican":
-  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h18l-4 18-7-5-7 5-4-18z"></path></svg>; // Example: Taco icon
-  //     case "Coffee":
-  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v8a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="10" x2="6" y2="14"></line><line x1="10" y1="10" x2="10" y2="14"></line></svg>; // Example: Coffee cup icon
-  //     case "Donuts":
-  //       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8a4 4 0 0 1 4 4"></path><path d="M8 12a4 4 0 0 1 4-4"></path><path d="M12 16a4 4 0 0 1-4-4"></path><path d="M16 12a4 4 0 0 1-4 4"></path></svg>; // Example: Donut icon
-  //     default:
-  //       return <ShoppingBag size={24} />; // Default icon
-  //   }
-  // };
+  // Função para lidar com logout
+  const handleLogout = () => {
+    if (window.confirm("Tem certeza que deseja sair?")) {
+      onLogout()
+    }
+  }
 
   return (
     <div className="home-container">
@@ -947,6 +1074,110 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                 </div>
               </div>
             </div>
+
+            {/* Menu do usuário */}
+            <div className="user-menu-container">
+              <button
+                className="user-menu-button"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) => (e.target.style.backgroundColor = "#f7f7f7")}
+                onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    backgroundColor: "#ea1d2c",
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  {user?.nome ? user.nome.charAt(0).toUpperCase() : "U"}
+                </div>
+                <ChevronDown size={16} />
+              </button>
+
+              {showUserMenu && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: "0",
+                    marginTop: "8px",
+                    backgroundColor: "white",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                    minWidth: "200px",
+                    zIndex: 1000,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "16px",
+                      borderBottom: "1px solid #f0f0f0",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        color: "#3e3e3e",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {user?.nome} {user?.sobrenome}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        color: "#717171",
+                      }}
+                    >
+                      {user?.email}
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      background: "none",
+                      border: "none",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "14px",
+                      color: "#ea1d2c",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#fff0f0")}
+                    onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
+                  >
+                    <LogOut size={16} />
+                    Sair
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -1058,7 +1289,11 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                   <ChevronLeft size={24} />
                 </button>
                 <div className="products-container" ref={productsContainerRef}>
-                  {products.filter((p) => p.deliveryFee === "Grátis").length > 0 ? (
+                  {initialLoad && loading ? (
+                    <div className="loading-products">
+                      <p>Carregando produtos...</p>
+                    </div>
+                  ) : products.length > 0 && products.filter((p) => p.deliveryFee === "Grátis").length > 0 ? (
                     <div className="products-items">
                       {products
                         .filter((p) => p.deliveryFee === "Grátis")
@@ -1093,9 +1328,9 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
             {/* Restaurants Grid - APENAS para a aba Restaurantes */}
             <div className="restaurants-section">
               <h2 className="section-title">Lojas</h2>
-              {loading ? (
+              {initialLoad && loading ? (
                 <div className="loading-state">
-                  <p>Carregando...</p>
+                  <p>Carregando restaurantes...</p>
                 </div>
               ) : restaurants.length > 0 ? (
                 <div className="restaurants-grid">
@@ -1154,7 +1389,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
           </>
         ) : activeTab === "inicio" ? (
           <>
-            <h1>Bem-vindo ao iFood</h1>
+            <h1>Bem-vindo ao iFood, {user?.nome}!</h1>
             <p>Encontre os melhores restaurantes, mercados e muito mais.</p>
           </>
         ) : (
@@ -1247,7 +1482,11 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
             {/* Conteúdo do Modal - Passo 1: Lista de Endereços */}
             {addressModalStep === 1 && (
               <div className="modal-content">
-                {savedAddresses.length > 0 ? (
+                {loadingAddresses ? (
+                  <div className="loading-state">
+                    <p>Carregando endereços...</p>
+                  </div>
+                ) : savedAddresses.length > 0 ? (
                   <div className="saved-addresses">
                     {savedAddresses.map((address) => (
                       <div
@@ -1349,7 +1588,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
               <div className="modal-content">
                 <div className="address-form">
                   <div className="address-label-selector">
-                    <div className="label-title">Identificação</div>
+                    <div className="label-title">Identificação (opcional)</div>
                     <div className="label-options">
                       <button
                         type="button"
@@ -1487,7 +1726,6 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                     className="modal-save-button"
                     onClick={saveNewAddress}
                     disabled={
-                      !newAddress.label ||
                       !newAddress.street ||
                       !newAddress.number ||
                       !newAddress.neighborhood ||
@@ -1612,8 +1850,4 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
 }
 
 export default HomePage
-
-
-
-
 
