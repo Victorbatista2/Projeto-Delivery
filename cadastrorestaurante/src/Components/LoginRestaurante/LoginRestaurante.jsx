@@ -73,8 +73,10 @@ const LoginRestaurante = () => {
         throw new Error(data.message || "Erro ao fazer login")
       }
 
-      // Armazenar dados do usuário no localStorage
-      localStorage.setItem("restauranteData", JSON.stringify(data.restaurante))
+      // Armazenar dados do restaurante no localStorage
+      localStorage.setItem("restauranteData", JSON.stringify(data.data))
+
+      console.log("Login bem-sucedido, redirecionando para dashboard...")
 
       // Redirecionar para o dashboard
       navigate("/dashboard")
@@ -141,9 +143,9 @@ const LoginRestaurante = () => {
 
           <div className="register-link">
             <p>Ainda não é parceiro?</p>
-            <a href="/" className="register-button">
-              Cadastre-se
-            </a>
+            <button type="button" className="register-button" onClick={() => navigate("/cadastro")}>
+              Cadastre-se aqui
+            </button>
           </div>
         </div>
       </div>

@@ -2,7 +2,6 @@ require("dotenv").config()
 const express = require("express")
 const router = express.Router()
 const db = require("../models/usuarioModel.js")
-const bcrypt = require("bcrypt")
 
 // Test endpoint
 router.get("/teste", (req, res) => {
@@ -34,7 +33,7 @@ router.get("/usuario/:id", async (req, res) => {
 })
 
 // Register new user
-router.post("/api/register", async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { nome, telefone, email, senha } = req.body
 
@@ -45,32 +44,27 @@ router.post("/api/register", async (req, res) => {
     // Verificar se o usuário já existe
     const usuarioExistente = await db.findByEmail(email)
     if (usuarioExistente) {
-      return res.status(400).json({ message: "Usuário já existe com este email" })
+      return res.status(400).json({ message: "Usuário já cadastrado com este email" })
     }
-
-    // Hash da senha
-    const senhaHash = await bcrypt.hash(senha, 10)
 
     // Cadastro regular sem OAuth
     const usuario = {
       nome,
       telefone,
       email,
-      senha: senhaHash,
+      senha,
       ativo: true,
       authProvider: "local",
     }
 
     const novoUsuario = await db.insertUsuarios(usuario)
 
+    // Remover senha do retorno
+    delete novoUsuario.senha
+
     res.status(201).json({
       message: "Usuário registrado com sucesso",
-      usuario: {
-        id: novoUsuario.id,
-        nome: novoUsuario.nome,
-        telefone: novoUsuario.telefone,
-        email: novoUsuario.email,
-      },
+      usuario: novoUsuario,
     })
   } catch (err) {
     console.error("Erro no cadastro:", err)
@@ -79,67 +73,24 @@ router.post("/api/register", async (req, res) => {
 })
 
 // Login
-router.post("/api/login", async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, senha } = req.body
-
-    console.log("Tentativa de login para:", email)
 
     if (!email || !senha) {
       return res.status(400).json({ message: "Email e senha são obrigatórios" })
     }
 
-    // Buscar usuário por email
-    const usuario = await db.findByEmail(email)
+    const usuario = await db.autenticarUsuario(email, senha)
 
-    if (!usuario) {
-      console.log("Usuário não encontrado:", email)
-      return res.status(401).json({ message: "Credenciais inválidas" })
+    if (usuario) {
+      res.json({
+        message: "Login bem-sucedido",
+        usuario: usuario,
+      })
+    } else {
+      res.status(401).json({ message: "Credenciais inválidas" })
     }
-
-    console.log("Usuário encontrado:", usuario.email)
-
-    // Verificar se a senha está correta
-    let senhaCorreta = false
-
-    if (usuario.senha) {
-      // Se a senha está hasheada, usar bcrypt
-      if (usuario.senha.startsWith("$2b$") || usuario.senha.startsWith("$2a$")) {
-        senhaCorreta = await bcrypt.compare(senha, usuario.senha)
-      } else {
-        // Se a senha não está hasheada (dados antigos), comparar diretamente
-        senhaCorreta = senha === usuario.senha
-
-        // Se a senha está correta mas não hasheada, vamos hashear e atualizar
-        if (senhaCorreta) {
-          const senhaHash = await bcrypt.hash(senha, 10)
-          await db.updateUsuarios(usuario.id, {
-            nome: usuario.nome,
-            telefone: usuario.telefone,
-            email: usuario.email,
-            senha: senhaHash,
-            ativo: usuario.ativo,
-          })
-        }
-      }
-    }
-
-    if (!senhaCorreta) {
-      console.log("Senha incorreta para:", email)
-      return res.status(401).json({ message: "Credenciais inválidas" })
-    }
-
-    console.log("Login bem-sucedido para:", email)
-
-    res.json({
-      message: "Login bem-sucedido",
-      usuario: {
-        id: usuario.id,
-        nome: usuario.nome,
-        telefone: usuario.telefone,
-        email: usuario.email,
-      },
-    })
   } catch (err) {
     console.error("Erro no login:", err)
     res.status(500).json({ message: "Erro no login", error: err.message })
@@ -147,3 +98,5 @@ router.post("/api/login", async (req, res) => {
 })
 
 module.exports = router
+
+

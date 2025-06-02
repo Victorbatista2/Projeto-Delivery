@@ -287,6 +287,3 @@ module.exports = {
   alterarStatus,
   autenticar,
 }
-
-
-

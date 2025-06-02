@@ -778,9 +778,9 @@ const CadastroRestaurante = () => {
     <div className="cadastro-restaurante-container">
       <div className="login-section">
         <span className="login-text">Já é parceiro?</span>
-        <a href="/login" className="login-button">
-          Login
-        </a>
+        <button type="button" className="login-button" onClick={() => navigate("/login")}>
+          Fazer Login
+        </button>
       </div>
 
       <div className="cadastro-header">
@@ -831,6 +831,8 @@ const CadastroRestaurante = () => {
 }
 
 export default CadastroRestaurante
+
+
 
 
 

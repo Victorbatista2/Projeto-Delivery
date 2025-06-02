@@ -1,6 +1,8 @@
-"use client"
-
-import { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
+import { useApp } from "../../contexts/AppContext"
+import LazyImage from "../../shared/LazyImage"
+import LoadingSpinner from "../../shared/LoadingSpinner"
 import "./HomePage.css"
 import {
   Search,
@@ -29,78 +31,122 @@ import {
   Beer,
   Sandwich,
   LogOut,
+  Star,
+  Clock,
 } from "lucide-react"
 
-const getCategoryIcon = (category) => {
-  switch (category?.toLowerCase()) {
-    case "lanches":
-      return <Sandwich size={24} />
-    case "pizza":
-      return <Pizza size={24} />
-    case "japonesa":
-      return <Fish size={24} />
-    case "brasileira":
-      return <Utensils size={24} />
-    case "doces & bolos":
-      return <Cake size={24} />
-    case "árabe":
-      return <Utensils size={24} />
-    case "chinesa":
-      return <Utensils size={24} />
-    case "italiana":
-      return <Utensils size={24} />
-    case "vegetariana":
-      return <Apple size={24} />
-    case "carnes":
-      return <Beef size={24} />
-    case "açaí":
-      return <Apple size={24} />
-    case "sorvetes":
-      return <Coffee size={24} />
-    case "salgados":
-      return <Sandwich size={24} />
-    case "gourmet":
-      return <Utensils size={24} />
-    case "marmita":
-      return <Utensils size={24} />
-    case "pastel":
-      return <Sandwich size={24} />
-    case "padarias":
-      return <Cake size={24} />
-    case "bebidas":
-      return <Beer size={24} />
-    case "café":
-      return <Coffee size={24} />
-    case "mercado":
-      return <ShoppingCart size={24} />
-    default:
-      return <Utensils size={24} />
-  }
-}
+// Memoized category icon component
+const CategoryIcon = React.memo(({ category }) => {
+  const getIcon = useCallback((cat) => {
+    switch (cat?.toLowerCase()) {
+      case "lanches":
+        return <Sandwich size={24} />
+      case "pizza":
+        return <Pizza size={24} />
+      case "japonesa":
+        return <Fish size={24} />
+      case "brasileira":
+        return <Utensils size={24} />
+      case "doces & bolos":
+        return <Cake size={24} />
+      case "árabe":
+        return <Utensils size={24} />
+      case "chinesa":
+        return <Utensils size={24} />
+      case "italiana":
+        return <Utensils size={24} />
+      case "vegetariana":
+        return <Apple size={24} />
+      case "carnes":
+        return <Beef size={24} />
+      case "açaí":
+        return <Apple size={24} />
+      case "sorvetes":
+        return <Coffee size={24} />
+      case "salgados":
+        return <Sandwich size={24} />
+      case "gourmet":
+        return <Utensils size={24} />
+      case "marmita":
+        return <Utensils size={24} />
+      case "pastel":
+        return <Sandwich size={24} />
+      case "padarias":
+        return <Cake size={24} />
+      case "bebidas":
+        return <Beer size={24} />
+      case "café":
+        return <Coffee size={24} />
+      case "mercado":
+        return <ShoppingCart size={24} />
+      default:
+        return <Utensils size={24} />
+    }
+  }, [])
 
-const HomePage = ({ user, onLogout, onProceedToPayment }) => {
+  return getIcon(category)
+})
+
+// Memoized restaurant card component
+const RestaurantCard = React.memo(({ restaurant }) => {
+  const formatPrice = useCallback((price) => {
+    return `R$ ${price.toFixed(2).replace(".", ",")}`
+  }, [])
+
+  return (
+    <div className="restaurant-card">
+      <div className="restaurant-card-image-container">
+        <LazyImage src={restaurant.image} alt={restaurant.name} className="restaurant-card-image" />
+        {restaurant.featured && <div className="featured-badge">Destaque</div>}
+      </div>
+      <div className="restaurant-card-content">
+        <h3 className="restaurant-card-name">{restaurant.name}</h3>
+        <div className="restaurant-card-info">
+          <div className="restaurant-card-rating">
+            <Star size={14} className="star-icon" />
+            <span>{restaurant.rating}</span>
+          </div>
+          <span className="restaurant-card-category">{restaurant.category}</span>
+          <span className="restaurant-card-distance">{restaurant.distance}</span>
+        </div>
+        <div className="restaurant-card-delivery">
+          <span className="restaurant-card-time">
+            <Clock size={12} />
+            {restaurant.deliveryTime}
+          </span>
+          <span className="restaurant-card-fee">
+            {restaurant.deliveryFee === "Grátis" ? (
+              <span className="free-delivery-text">Grátis</span>
+            ) : (
+              restaurant.deliveryFee
+            )}
+          </span>
+        </div>
+        {restaurant.coupon && (
+          <div className="restaurant-card-coupon">
+            <Ticket size={14} />
+            <span>{restaurant.coupon}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+})
+
+const HomePage = ({ user, onLogout }) => {
+  const navigate = useNavigate()
+  const { state, actions } = useApp()
+
+  // Local state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState("inicio")
+  const [activeTab, setActiveTab] = useState("restaurantes")
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState({ restaurants: [], products: [] })
   const [showSearchResults, setShowSearchResults] = useState(false)
-  const [cartItems, setCartItems] = useState(0)
-  const [cartTotal, setCartTotal] = useState(0)
-  const [notifications, setNotifications] = useState(0)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const searchRef = useRef(null)
-
-  // Restaurantes e produtos
-  const [restaurants, setRestaurants] = useState([])
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [initialLoad, setInitialLoad] = useState(true)
-
-  // Estados para o modal de endereço
   const [showAddressModal, setShowAddressModal] = useState(false)
   const [addressModalStep, setAddressModalStep] = useState(1)
   const [addressSearchQuery, setAddressSearchQuery] = useState("")
-  const [addressSuggestions, setAddressSuggestions] = useState([])
   const [newAddress, setNewAddress] = useState({
     label: "",
     street: "",
@@ -112,79 +158,58 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
     zipCode: "",
     isDefault: false,
   })
-  const [mapLoaded, setMapLoaded] = useState(false)
-  const mapRef = useRef(null)
-  const autocompleteInputRef = useRef(null)
-
-  // Estados para a sacola
   const [showCart, setShowCart] = useState(false)
-  const [cartProducts, setCartProducts] = useState([])
-  const [deliveryFee, setDeliveryFee] = useState(7.9)
-  const cartRef = useRef(null)
+  const [mapLoaded, setMapLoaded] = useState(false)
 
-  // Add these refs for the carousels
+  // Refs
+  const searchRef = useRef(null)
   const categoriesContainerRef = useRef(null)
   const productsContainerRef = useRef(null)
+  const mapRef = useRef(null)
+  const autocompleteInputRef = useRef(null)
+  const cartRef = useRef(null)
 
-  // Update the address-related state initialization
-  const [savedAddresses, setSavedAddresses] = useState([])
-  const [selectedAddress, setSelectedAddress] = useState(null)
-  const [loadingAddresses, setLoadingAddresses] = useState(false)
+  // Memoized categories list
+  const categories = useMemo(
+    () => [
+      "Lanches",
+      "Pizza",
+      "Doces & Bolos",
+      "Japonesa",
+      "Brasileira",
+      "Açaí",
+      "Árabe",
+      "Chinesa",
+      "Sorvetes",
+      "Italiana",
+      "Vegetariana",
+      "Carnes",
+      "Salgados",
+      "Gourmet",
+      "Marmita",
+      "Pastel",
+      "Padarias",
+    ],
+    [],
+  )
 
-  // Ref para evitar múltiplas chamadas simultâneas
-  const loadingRef = useRef(false)
-
-  // Add function to load addresses from backend
-  const loadUserAddresses = useCallback(async () => {
-    if (!user?.id) return
-
-    setLoadingAddresses(true)
-    try {
-      const response = await fetch(`http://localhost:3001/api/enderecos/usuario/${user.id}`)
-      const data = await response.json()
-
-      if (data.success && data.data) {
-        const formattedAddresses = data.data.map((addr) => ({
-          id: addr.id,
-          label: addr.rotulo,
-          street: addr.rua,
-          number: addr.numero,
-          complement: addr.complemento,
-          neighborhood: addr.bairro,
-          city: addr.cidade,
-          state: addr.estado,
-          zipCode: addr.cep,
-          isDefault: addr.padrao,
-        }))
-
-        setSavedAddresses(formattedAddresses)
-
-        // Set default address as selected
-        const defaultAddress = formattedAddresses.find((addr) => addr.isDefault)
-        if (defaultAddress && !selectedAddress) {
-          setSelectedAddress(defaultAddress)
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao carregar endereços:", error)
-    } finally {
-      setLoadingAddresses(false)
-    }
-  }, [user?.id, selectedAddress])
-
-  // Load addresses when component mounts or user changes
+  // Load restaurants on component mount - apenas uma vez
   useEffect(() => {
-    loadUserAddresses()
-  }, [loadUserAddresses])
+    if (state.restaurants.length === 0 && !state.loading.restaurants) {
+      actions.loadRestaurants()
+    }
+  }, []) // Dependências vazias para executar apenas uma vez
 
-  // Adicionar uma nova função para lidar com o clique na categoria
-  const handleCategoryClick = (category) => {
-    // Redirecionar para a página da categoria
-    window.location.href = `/categoria/${category.toLowerCase().replace(/\s+/g, "-")}`
-  }
+  // Handle category click
+  const handleCategoryClick = useCallback(
+    (category) => {
+      navigate(`/categoria/${category.toLowerCase().replace(/\s+/g, "-")}`)
+    },
+    [navigate],
+  )
 
-  // Add this function to handle carousel scrolling
-  const handleCarouselScroll = (containerRef, direction) => {
+  // Handle carousel scroll
+  const handleCarouselScroll = useCallback((containerRef, direction) => {
     if (!containerRef.current) return
 
     const scrollAmount = direction === "left" ? -300 : 300
@@ -192,304 +217,144 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
       left: scrollAmount,
       behavior: "smooth",
     })
-  }
+  }, [])
 
-  // Função melhorada para carregar dados com cache automático
-  const loadData = useCallback(async () => {
-    // Evitar múltiplas chamadas simultâneas
-    if (loadingRef.current) {
-      console.log("Carregamento já em andamento, ignorando...")
-      return
-    }
+  // Search functionality
+  const performSearch = useCallback(
+    (query) => {
+      const normalizedQuery = query.toLowerCase().trim()
 
-    loadingRef.current = true
-    setLoading(true)
+      const filteredRestaurants = state.restaurants.filter(
+        (restaurant) =>
+          restaurant.name.toLowerCase().includes(normalizedQuery) ||
+          restaurant.category.toLowerCase().includes(normalizedQuery),
+      )
 
-    try {
-      console.log("Iniciando carregamento de dados...")
+      setSearchResults({
+        restaurants: filteredRestaurants,
+        products: [], // Products will be implemented later
+      })
+    },
+    [state.restaurants],
+  )
 
-      // Função para fazer requisição com retry automático
-      const fetchWithRetry = async (url, maxRetries = 3) => {
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-          try {
-            const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), 8000)
+  const handleSearchInputChange = useCallback(
+    (e) => {
+      const query = e.target.value
+      setSearchQuery(query)
 
-            const response = await fetch(url, {
-              signal: controller.signal,
-              headers: {
-                "Content-Type": "application/json",
-              },
-            })
-
-            clearTimeout(timeoutId)
-
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-            }
-
-            const data = await response.json()
-            return Array.isArray(data) ? data : []
-          } catch (error) {
-            console.warn(`Tentativa ${attempt}/${maxRetries} falhou:`, error.message)
-            if (attempt === maxRetries) throw error
-            await new Promise((resolve) => setTimeout(resolve, 1000 * attempt))
-          }
-        }
-      }
-
-      // Carregar restaurantes e produtos em paralelo
-      const [restaurantsResult, productsResult] = await Promise.allSettled([
-        fetchWithRetry("http://localhost:3001/api/restaurantes"),
-        fetchWithRetry("http://localhost:3001/api/products"),
-      ])
-
-      // Processar resultados dos restaurantes
-      if (restaurantsResult.status === "fulfilled") {
-        const restaurants = restaurantsResult.value || []
-        console.log(`${restaurants.length} restaurantes carregados`)
-        setRestaurants(restaurants)
+      if (query.trim().length > 2) {
+        performSearch(query)
+        setShowSearchResults(true)
       } else {
-        console.error("Erro ao carregar restaurantes:", restaurantsResult.reason)
-        setRestaurants([])
+        setSearchResults({ restaurants: [], products: [] })
+        setShowSearchResults(false)
       }
+    },
+    [performSearch],
+  )
 
-      // Processar resultados dos produtos
-      if (productsResult.status === "fulfilled") {
-        const products = productsResult.value || []
-        console.log(`${products.length} produtos carregados`)
-        setProducts(products)
-      } else {
-        console.error("Erro ao carregar produtos:", productsResult.reason)
-        setProducts([])
-      }
-    } catch (error) {
-      console.error("Erro geral no carregamento:", error)
-      setRestaurants([])
-      setProducts([])
-    } finally {
-      setLoading(false)
-      setInitialLoad(false)
-      loadingRef.current = false
-      console.log("Carregamento finalizado")
-    }
+  const clearSearch = useCallback(() => {
+    setSearchQuery("")
+    setSearchResults({ restaurants: [], products: [] })
+    setShowSearchResults(false)
   }, [])
 
-  // Carregar dados quando o componente monta
-  useEffect(() => {
-    console.log("Componente HomePage montado")
-    loadData()
-  }, [loadData])
-
-  // Pré-carregar dados quando a aba restaurantes é ativada
-  useEffect(() => {
-    if (activeTab === "restaurantes" && restaurants.length === 0 && !loading && !loadingRef.current) {
-      console.log("Aba restaurantes ativada, carregando dados...")
-      loadData()
-    }
-  }, [activeTab, restaurants.length, loading, loadData])
-
-  // Substitua o useEffect para os botões do carrossel pelo código abaixo
-  // Localizar o useEffect que começa com:
-  // useEffect(() => {
-  //   const handleCategoryPrev = () => {
-  // E substitua todo o bloco
-  // Simplified carousel effect without dependencies that could cause infinite loops
-  useEffect(() => {
-    const handleCategoryPrev = () => {
-      if (categoriesContainerRef.current) {
-        categoriesContainerRef.current.scrollBy({ left: -300, behavior: "smooth" })
-      }
-    }
-
-    const handleCategoryNext = () => {
-      if (categoriesContainerRef.current) {
-        categoriesContainerRef.current.scrollBy({ left: 300, behavior: "smooth" })
-      }
-    }
-
-    const handleProductsPrev = () => {
-      if (productsContainerRef.current) {
-        productsContainerRef.current.scrollBy({ left: -300, behavior: "smooth" })
-      }
-    }
-
-    const handleProductsNext = () => {
-      if (productsContainerRef.current) {
-        productsContainerRef.current.scrollBy({ left: 300, behavior: "smooth" })
-      }
-    }
-
-    // Add event listeners only once
-    const categoryPrevBtn = document.getElementById("category-prev-btn")
-    const categoryNextBtn = document.getElementById("category-next-btn")
-    const productsPrevBtn = document.querySelector(".free-delivery-section .carousel-prev")
-    const productsNextBtn = document.querySelector(".free-delivery-section .carousel-next")
-
-    if (categoryPrevBtn) categoryPrevBtn.addEventListener("click", handleCategoryPrev)
-    if (categoryNextBtn) categoryNextBtn.addEventListener("click", handleCategoryNext)
-    if (productsPrevBtn) productsPrevBtn.addEventListener("click", handleProductsPrev)
-    if (productsNextBtn) productsNextBtn.addEventListener("click", handleProductsNext)
-
-    return () => {
-      if (categoryPrevBtn) categoryPrevBtn.removeEventListener("click", handleCategoryPrev)
-      if (categoryNextBtn) categoryNextBtn.removeEventListener("click", handleCategoryNext)
-      if (productsPrevBtn) productsPrevBtn.removeEventListener("click", handleProductsPrev)
-      if (productsNextBtn) productsNextBtn.removeEventListener("click", handleProductsNext)
-    }
+  // Address functionality
+  const handleAddressFormChange = useCallback((e) => {
+    const { name, value, type, checked } = e.target
+    setNewAddress((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }))
   }, [])
 
-  // Adicionar uma verificação para garantir que todas as categorias estão sendo renderizadas
-  useEffect(() => {
-    console.log(
-      "Categorias renderizadas:",
-      Array.from(document.querySelectorAll(".category-name")).map((el) => el.textContent),
-    )
+  const setAddressLabel = useCallback((label) => {
+    setNewAddress((prev) => ({
+      ...prev,
+      label,
+    }))
   }, [])
 
-  // Adicionar a função para excluir um endereço
-  const deleteAddress = async (addressId, e) => {
-    e.stopPropagation()
-
-    if (!window.confirm("Tem certeza que deseja excluir este endereço?")) {
-      return
-    }
-
-    if (!user?.id) {
-      alert("Usuário não encontrado. Faça login novamente.")
-      return
-    }
-
+  const saveNewAddress = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/enderecos/${addressId}/usuario/${user.id}`, {
-        method: "DELETE",
+      const savedAddress = await actions.addAddress(newAddress)
+
+      setNewAddress({
+        label: "",
+        street: "",
+        number: "",
+        complement: "",
+        neighborhood: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        isDefault: false,
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || "Erro ao excluir endereço")
-      }
-
-      if (data.success) {
-        // Reload addresses from backend
-        await loadUserAddresses()
-        alert("Endereço excluído com sucesso!")
-      }
+      setShowAddressModal(false)
+      setAddressModalStep(1)
     } catch (error) {
-      console.error("Erro ao excluir endereço:", error)
-      alert("Erro ao excluir endereço: " + error.message)
+      console.error("Erro ao salvar endereço:", error)
     }
-  }
+  }, [newAddress, actions])
 
-  // Inicializar o mapa e o autocomplete
-  const initMap = useCallback(() => {
-    if (!mapRef.current || mapLoaded) return
+  const selectSavedAddress = useCallback(
+    (address) => {
+      actions.selectAddress(address)
+      setShowAddressModal(false)
+    },
+    [actions],
+  )
 
-    setMapLoaded(true)
+  const deleteAddress = useCallback(
+    async (addressId, e) => {
+      e.stopPropagation()
 
-    // Inicializar o mapa
-    const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat: -23.5505, lng: -46.6333 }, // São Paulo como centro padrão
-      zoom: 15,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-    })
-
-    // Inicializar o autocomplete
-    const autocomplete = new window.google.maps.places.Autocomplete(autocompleteInputRef.current, {
-      types: ["address"],
-      componentRestrictions: { country: "br" }, // Restringir para Brasil, ajuste conforme necessário
-    })
-
-    // Vincular o autocomplete ao mapa
-    autocomplete.bindTo("bounds", map)
-
-    // Adicionar um marcador para o endereço selecionado
-    const marker = new window.google.maps.Marker({
-      map: map,
-      anchorPoint: new window.google.maps.Point(0, -29),
-    })
-
-    // Evento para quando um lugar é selecionado no autocomplete
-    autocomplete.addListener("place_changed", () => {
-      marker.setVisible(false)
-      const place = autocomplete.getPlace()
-
-      if (!place.geometry || !place.geometry.location) {
-        console.error("Detalhes do local não encontrados para este endereço.")
-        return
-      }
-
-      // Centralizar o mapa no local selecionado
-      if (place.geometry.viewport) {
-        map.fitBounds(place.geometry.viewport)
-      } else {
-        map.setCenter(place.geometry.location)
-        map.setZoom(17)
-      }
-
-      // Posicionar o marcador
-      marker.setPosition(place.geometry.location)
-      marker.setVisible(true)
-
-      // Extrair informações do endereço
-      let street = ""
-      let number = ""
-      let neighborhood = ""
-      let city = ""
-      let state = ""
-      let zipCode = ""
-
-      // Processar os componentes do endereço
-      for (const component of place.address_components) {
-        const types = component.types
-
-        if (types.includes("route")) {
-          street = component.long_name
-        } else if (types.includes("street_number")) {
-          number = component.long_name
-        } else if (types.includes("sublocality_level_1") || types.includes("sublocality")) {
-          neighborhood = component.long_name
-        } else if (types.includes("administrative_area_level_2")) {
-          city = component.long_name
-        } else if (types.includes("administrative_area_level_1")) {
-          state = component.short_name
-        } else if (types.includes("postal_code")) {
-          zipCode = component.long_name
+      if (window.confirm("Tem certeza que deseja excluir este endereço?")) {
+        try {
+          await actions.deleteAddress(addressId)
+        } catch (error) {
+          console.error("Erro ao excluir endereço:", error)
         }
       }
+    },
+    [actions],
+  )
 
-      // Atualizar o estado do novo endereço
-      setNewAddress((prev) => ({
-        ...prev,
-        street,
-        number,
-        neighborhood,
-        city,
-        state,
-        zipCode,
-      }))
+  // Format functions
+  const formatAddressForDisplay = useCallback((address) => {
+    if (!address) return "Adicionar endereço"
+    return `${address.street}, ${address.number}`
+  }, [])
 
-      // Avançar para o próximo passo
-      setAddressModalStep(3)
-    })
+  const formatPrice = useCallback((price) => {
+    return `R$ ${price.toFixed(2).replace(".", ",")}`
+  }, [])
 
-    // Salvar referências para uso posterior
-    window.googleMap = map
-    window.googleMarker = marker
-    window.googleAutocomplete = autocomplete
-  }, [mapLoaded])
+  // Cart functionality
+  const toggleCart = useCallback(() => {
+    setShowCart((prev) => !prev)
+  }, [])
 
-  // Busca de endereços com a API do Google Maps
-  const handleAddressSearch = (e) => {
-    const query = e.target.value
-    setAddressSearchQuery(query)
-    // O Google Autocomplete gerencia as sugestões automaticamente
-  }
+  const calculateSubtotal = useCallback(() => {
+    return state.cart.total
+  }, [state.cart.total])
 
-  // Fechar resultados da pesquisa quando clicar fora
+  const calculateTotal = useCallback(() => {
+    const deliveryFee = 7.9
+    return calculateSubtotal() + deliveryFee
+  }, [calculateSubtotal])
+
+  // Handle logout
+  const handleLogout = useCallback(() => {
+    if (window.confirm("Tem certeza que deseja sair?")) {
+      actions.logout()
+      if (onLogout) onLogout()
+    }
+  }, [actions, onLogout])
+
+  // Close modals when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -506,7 +371,6 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
         setShowCart(false)
       }
 
-      // Fechar menu do usuário quando clicar fora
       if (showUserMenu && !event.target.closest(".user-menu-container")) {
         setShowUserMenu(false)
       }
@@ -516,396 +380,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [searchRef, showCart, showUserMenu])
-
-  // Carregar o script do Google Maps
-  useEffect(() => {
-    if (showAddressModal && addressModalStep === 2 && !mapLoaded) {
-      // Verificar se o script já foi carregado
-      if (!document.getElementById("google-maps-script")) {
-        const googleMapScript = document.createElement("script")
-        googleMapScript.id = "google-maps-script"
-        googleMapScript.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDdRLljL01LunT_X0eyE59DYtxdtav6oP0&libraries=places&callback=initGoogleMaps`
-        googleMapScript.async = true
-        googleMapScript.defer = true
-
-        // Definir uma função global de callback
-        window.initGoogleMaps = () => {
-          initMap()
-        }
-
-        document.body.appendChild(googleMapScript)
-
-        return () => {
-          // Limpar a função global ao desmontar
-          window.initGoogleMaps = null
-        }
-      } else if (window.google && window.google.maps) {
-        // Se o script já foi carregado, inicializar o mapa diretamente
-        initMap()
-      }
-    }
-  }, [showAddressModal, addressModalStep, mapLoaded, initMap])
-
-  // Selecionar um endereço sugerido
-  const handleSelectSuggestion = (placeId) => {
-    if (!window.google || !window.google.maps || !window.google.maps.places) {
-      console.error("Google Maps API não está disponível")
-      return
-    }
-
-    const placesService = new window.google.maps.places.PlacesService(window.googleMap)
-
-    placesService.getDetails(
-      {
-        placeId: placeId,
-        fields: ["address_components", "geometry", "formatted_address"],
-      },
-      (place, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-          // Extrair informações do endereço
-          let street = ""
-          let number = ""
-          let neighborhood = ""
-          let city = ""
-          let state = ""
-          let zipCode = ""
-
-          // Processar os componentes do endereço
-          for (const component of place.address_components) {
-            const types = component.types
-
-            if (types.includes("route")) {
-              street = component.long_name
-            } else if (types.includes("street_number")) {
-              number = component.long_name
-            } else if (types.includes("sublocality_level_1") || types.includes("sublocality")) {
-              neighborhood = component.long_name
-            } else if (types.includes("administrative_area_level_2")) {
-              city = component.long_name
-            } else if (types.includes("administrative_area_level_1")) {
-              state = component.short_name
-            } else if (types.includes("postal_code")) {
-              zipCode = component.long_name
-            }
-          }
-
-          // Atualizar o estado do novo endereço
-          setNewAddress({
-            ...newAddress,
-            street,
-            number,
-            neighborhood,
-            city,
-            state,
-            zipCode,
-          })
-
-          // Centralizar o mapa no local selecionado
-          if (window.googleMap && place.geometry) {
-            if (place.geometry.viewport) {
-              window.googleMap.fitBounds(place.geometry.viewport)
-            } else {
-              window.googleMap.setCenter(place.geometry.location)
-              window.googleMap.setZoom(17)
-            }
-
-            // Posicionar o marcador
-            if (window.googleMarker) {
-              window.googleMarker.setPosition(place.geometry.location)
-              window.googleMarker.setVisible(true)
-            }
-          }
-
-          // Avançar para o próximo passo
-          setAddressModalStep(3)
-        } else {
-          console.error("Erro ao obter detalhes do local:", status)
-        }
-      },
-    )
-  }
-
-  // Salvar o novo endereço
-  const saveNewAddress = async () => {
-    if (!user?.id) {
-      alert("Usuário não encontrado. Faça login novamente.")
-      return
-    }
-
-    try {
-      const addressData = {
-        rotulo: newAddress.label || "Endereço",
-        rua: newAddress.street,
-        numero: newAddress.number,
-        complemento: newAddress.complement,
-        bairro: newAddress.neighborhood,
-        cidade: newAddress.city,
-        estado: newAddress.state,
-        cep: newAddress.zipCode,
-        padrao: newAddress.isDefault,
-      }
-
-      const response = await fetch(`http://localhost:3001/api/enderecos/usuario/${user.id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(addressData),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || "Erro ao salvar endereço")
-      }
-
-      if (data.success) {
-        // Reload addresses from backend
-        await loadUserAddresses()
-
-        // Reset form and close modal
-        setNewAddress({
-          label: "",
-          street: "",
-          number: "",
-          complement: "",
-          neighborhood: "",
-          city: "",
-          state: "",
-          zipCode: "",
-          isDefault: false,
-        })
-
-        setShowAddressModal(false)
-        setAddressModalStep(1)
-
-        alert("Endereço salvo com sucesso!")
-      }
-    } catch (error) {
-      console.error("Erro ao salvar endereço:", error)
-      alert("Erro ao salvar endereço: " + error.message)
-    }
-  }
-
-  // Selecionar um endereço salvo
-  const selectSavedAddress = (address) => {
-    setSelectedAddress(address)
-    setShowAddressModal(false)
-  }
-
-  // Definir um endereço como padrão
-  const setAddressAsDefault = async (addressId) => {
-    if (!user?.id) {
-      alert("Usuário não encontrado. Faça login novamente.")
-      return
-    }
-
-    try {
-      const response = await fetch(`http://localhost:3001/api/enderecos/${addressId}/usuario/${user.id}/padrao`, {
-        method: "PATCH",
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || "Erro ao definir endereço padrão")
-      }
-
-      if (data.success) {
-        // Reload addresses from backend
-        await loadUserAddresses()
-      }
-    } catch (error) {
-      console.error("Erro ao definir endereço padrão:", error)
-      alert("Erro ao definir endereço padrão: " + error.message)
-    }
-  }
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }
-
-  const handleTabClick = (tab) => {
-    setActiveTab(tab)
-    setIsMobileMenuOpen(false)
-  }
-
-  // Função para pesquisar restaurantes e produtos
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      performSearch(searchQuery)
-    }
-  }
-
-  // Função para pesquisar em tempo real enquanto o usuário digita
-  const handleSearchInputChange = (e) => {
-    const query = e.target.value
-    setSearchQuery(query)
-
-    if (query.trim().length > 2) {
-      performSearch(query)
-      setShowSearchResults(true)
-    } else {
-      setSearchResults({ restaurants: [], products: [] })
-      setShowSearchResults(false)
-    }
-  }
-
-  // Função que realiza a pesquisa nos dados
-  const performSearch = (query) => {
-    const normalizedQuery = query.toLowerCase().trim()
-
-    // Pesquisar restaurantes
-    const filteredRestaurants = restaurants.filter(
-      (restaurant) =>
-        restaurant.name.toLowerCase().includes(normalizedQuery) ||
-        restaurant.category.toLowerCase().includes(normalizedQuery),
-    )
-
-    // Pesquisar produtos
-    const filteredProducts = products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(normalizedQuery) ||
-        product.restaurant.toLowerCase().includes(normalizedQuery),
-    )
-
-    // Combinar resultados
-    setSearchResults({
-      restaurants: filteredRestaurants,
-      products: filteredProducts,
-    })
-  }
-
-  // Limpar a pesquisa
-  const clearSearch = () => {
-    setSearchQuery("")
-    setSearchResults({ restaurants: [], products: [] })
-    setShowSearchResults(false)
-  }
-
-  // Adicionar ao carrinho
-  const addToCart = (product) => {
-    // Verificar se o produto já está no carrinho
-    const existingProductIndex = cartProducts.findIndex((item) => item.id === product.id)
-
-    if (existingProductIndex !== -1) {
-      // Se o produto já existe, aumentar a quantidade
-      const updatedCartProducts = [...cartProducts]
-      updatedCartProducts[existingProductIndex].quantity += 1
-      setCartProducts(updatedCartProducts)
-    } else {
-      // Se o produto não existe, adicionar ao carrinho
-      setCartProducts([...cartProducts, { ...product, quantity: 1 }])
-    }
-
-    // Atualizar o número total de itens
-    setCartItems((prevItems) => prevItems + 1)
-
-    // Atualizar o valor total
-    const price = Number.parseFloat(product.price.replace("R$ ", "").replace(",", "."))
-    setCartTotal((prevTotal) => prevTotal + price)
-
-    // Fechar os resultados da pesquisa
-    setShowSearchResults(false)
-  }
-
-  // Aumentar quantidade de um item no carrinho
-  const increaseQuantity = (productId) => {
-    const updatedCartProducts = cartProducts.map((product) => {
-      if (product.id === productId) {
-        const newQuantity = product.quantity + 1
-        const price = Number.parseFloat(product.price.replace("R$ ", "").replace(",", "."))
-        setCartTotal((prevTotal) => prevTotal + price)
-        setCartItems((prevItems) => prevItems + 1)
-        return { ...product, quantity: newQuantity }
-      }
-      return product
-    })
-
-    setCartProducts(updatedCartProducts)
-  }
-
-  // Diminuir quantidade de um item no carrinho
-  const decreaseQuantity = (productId) => {
-    const updatedCartProducts = cartProducts.map((product) => {
-      if (product.id === productId && product.quantity > 1) {
-        const newQuantity = product.quantity - 1
-        const price = Number.parseFloat(product.price.replace("R$ ", "").replace(",", "."))
-        setCartTotal((prevTotal) => prevTotal - price)
-        setCartItems((prevItems) => prevItems - 1)
-        return { ...product, quantity: newQuantity }
-      }
-      return product
-    })
-
-    setCartProducts(updatedCartProducts)
-  }
-
-  // Remover um item do carrinho
-  const removeFromCart = (productId) => {
-    const productToRemove = cartProducts.find((product) => product.id === productId)
-
-    if (productToRemove) {
-      const price = Number.parseFloat(productToRemove.price.replace("R$ ", "").replace(",", "."))
-      const totalPriceToRemove = price * productToRemove.quantity
-
-      setCartTotal((prevTotal) => prevTotal - totalPriceToRemove)
-      setCartItems((prevItems) => prevItems - productToRemove.quantity)
-      setCartProducts(cartProducts.filter((product) => product.id !== productId))
-    }
-  }
-
-  // Formatar o endereço para exibição
-  const formatAddressForDisplay = (address) => {
-    if (!address) return ""
-    return `${address.street}, ${address.number}`
-  }
-
-  // Manipular mudanças no formulário de endereço
-  const handleAddressFormChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setNewAddress({
-      ...newAddress,
-      [name]: type === "checkbox" ? checked : value,
-    })
-  }
-
-  // Definir o rótulo do endereço (Casa ou Trabalho)
-  const setAddressLabel = (label) => {
-    setNewAddress({
-      ...newAddress,
-      label,
-    })
-  }
-
-  // Formatar preço para exibição
-  const formatPrice = (price) => {
-    return `R$ ${price.toFixed(2).replace(".", ",")}`
-  }
-
-  // Abrir a sacola
-  const toggleCart = () => {
-    setShowCart(!showCart)
-  }
-
-  // Calcular o subtotal
-  const calculateSubtotal = () => {
-    return cartTotal
-  }
-
-  // Calcular o total
-  const calculateTotal = () => {
-    return calculateSubtotal() + deliveryFee
-  }
-
-  // Função para lidar com logout
-  const handleLogout = () => {
-    if (window.confirm("Tem certeza que deseja sair?")) {
-      onLogout()
-    }
-  }
+  }, [showCart, showUserMenu])
 
   return (
     <div className="home-container">
@@ -913,18 +388,23 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
         <div className="header-container">
           {/* Logo */}
           <div className="logo">
-            <button type="button" onClick={() => handleTabClick("inicio")} className="logo-button">
-              <svg viewBox="0 0 80 24" className="ifood-logo">
+            <button
+              type="button"
+              onClick={() => setActiveTab("restaurantes")}
+              className="logo-button"
+              aria-label="Ir para página inicial"
+            >
+              <svg viewBox="0 0 80 24" className="ifood-logo" aria-hidden="true">
                 <path
                   d="M6.4 0h10.4v6.4H6.4V0zm0 9.6h10.4V16H6.4V9.6zm13.6-9.6H30v6.4H20V0zM0 0h3.2v22.4H0V0zm20 9.6h10.4V16H20V9.6zm-13.6 9.6h24v3.2h-24v-3.2zm30.4-19.2c-1.76 0-3.2 1.44-3.2 3.2v19.2h6.4V3.2c0-1.76-1.44-3.2-3.2-3.2zm7.2 0v22.4h6.4v-8h6.4v8h6.4V0h-6.4v8h-6.4V0h-6.4zm27.2 0c-1.76 0-3.2 1.44-3.2 3.2v19.2h6.4V3.2c0-1.76-1.44-3.2-3.2-3.2z"
                   fill="#ea1d2c"
-                ></path>
+                />
               </svg>
             </button>
           </div>
 
           {/* Mobile Menu Toggle */}
-          <div className="menu-toggle" onClick={toggleMobileMenu}>
+          <div className="menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
             <div className={isMobileMenuOpen ? "hamburger active" : "hamburger"}>
               <span className="bar"></span>
               <span className="bar"></span>
@@ -936,37 +416,37 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
           <nav className={isMobileMenuOpen ? "nav-menu active" : "nav-menu"}>
             <ul className="nav-list">
               <li className={activeTab === "inicio" ? "nav-item active" : "nav-item"}>
-                <button type="button" onClick={() => handleTabClick("inicio")} className="nav-link">
+                <button type="button" onClick={() => setActiveTab("inicio")} className="nav-link">
                   Início
                 </button>
               </li>
               <li className={activeTab === "restaurantes" ? "nav-item active" : "nav-item"}>
-                <button type="button" onClick={() => handleTabClick("restaurantes")} className="nav-link">
+                <button type="button" onClick={() => setActiveTab("restaurantes")} className="nav-link">
                   Restaurantes
                 </button>
               </li>
               <li className={activeTab === "mercados" ? "nav-item active" : "nav-item"}>
-                <button type="button" onClick={() => handleTabClick("mercados")} className="nav-link">
+                <button type="button" onClick={() => setActiveTab("mercados")} className="nav-link">
                   Mercados
                 </button>
               </li>
               <li className={activeTab === "bebidas" ? "nav-item active" : "nav-item"}>
-                <button type="button" onClick={() => handleTabClick("bebidas")} className="nav-link">
+                <button type="button" onClick={() => setActiveTab("bebidas")} className="nav-link">
                   Bebidas
                 </button>
               </li>
               <li className={activeTab === "farmacias" ? "nav-item active" : "nav-item"}>
-                <button type="button" onClick={() => handleTabClick("farmacias")} className="nav-link">
+                <button type="button" onClick={() => setActiveTab("farmacias")} className="nav-link">
                   Farmácias
                 </button>
               </li>
               <li className={activeTab === "pets" ? "nav-item active" : "nav-item"}>
-                <button type="button" onClick={() => handleTabClick("pets")} className="nav-link">
+                <button type="button" onClick={() => setActiveTab("pets")} className="nav-link">
                   Pets
                 </button>
               </li>
               <li className={activeTab === "shopping" ? "nav-item active" : "nav-item"}>
-                <button type="button" onClick={() => handleTabClick("shopping")} className="nav-link">
+                <button type="button" onClick={() => setActiveTab("shopping")} className="nav-link">
                   Shopping
                 </button>
               </li>
@@ -975,25 +455,26 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
 
           {/* Search Bar */}
           <div className="search-container" ref={searchRef}>
-            <form onSubmit={handleSearch}>
+            <form onSubmit={(e) => e.preventDefault()}>
               <div className="search-input">
-                <Search className="search-icon" size={20} />
+                <Search className="search-icon" size={20} aria-hidden="true" />
                 <input
                   type="text"
                   placeholder="Busque por item ou loja"
                   value={searchQuery}
                   onChange={handleSearchInputChange}
                   onFocus={() => searchQuery.trim().length > 2 && setShowSearchResults(true)}
+                  aria-label="Buscar restaurantes e produtos"
                 />
                 {searchQuery && (
-                  <button type="button" className="clear-search" onClick={clearSearch}>
+                  <button type="button" className="clear-search" onClick={clearSearch} aria-label="Limpar busca">
                     <X size={16} />
                   </button>
                 )}
               </div>
             </form>
 
-            {/* Resultados da pesquisa */}
+            {/* Search Results */}
             {showSearchResults && (
               <div className="search-results">
                 {searchResults.restaurants.length > 0 && (
@@ -1003,10 +484,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                       {searchResults.restaurants.map((restaurant) => (
                         <li key={`restaurant-${restaurant.id}`} className="restaurant-item">
                           <div className="restaurant-image">
-                            <img
-                              src={restaurant.image || "/placeholder.svg?height=60&width=60"}
-                              alt={restaurant.name}
-                            />
+                            <LazyImage src={restaurant.image} alt={restaurant.name} />
                           </div>
                           <div className="restaurant-info">
                             <h4>{restaurant.name}</h4>
@@ -1023,30 +501,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                   </div>
                 )}
 
-                {searchResults.products.length > 0 && (
-                  <div className="search-results-section">
-                    <h3>Produtos</h3>
-                    <ul>
-                      {searchResults.products.map((product) => (
-                        <li key={`product-${product.id}`} className="product-item">
-                          <div className="product-image">
-                            <img src={product.image || "/placeholder.svg?height=60&width=60"} alt={product.name} />
-                          </div>
-                          <div className="product-info">
-                            <h4>{product.name}</h4>
-                            <div className="product-restaurant">{product.restaurant}</div>
-                            <div className="product-price">{product.price}</div>
-                          </div>
-                          <button className="add-to-cart-button" onClick={() => addToCart(product)}>
-                            +
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {searchResults.restaurants.length === 0 && searchResults.products.length === 0 && (
+                {searchResults.restaurants.length === 0 && (
                   <div className="no-results">
                     <p>Nenhum resultado encontrado para "{searchQuery}"</p>
                   </div>
@@ -1057,25 +512,41 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
 
           {/* User Actions */}
           <div className="user-actions">
-            <div className="address-selector" onClick={() => setShowAddressModal(true)}>
-              <span>{selectedAddress ? formatAddressForDisplay(selectedAddress) : "Adicionar endereço"}</span>
+            <div
+              className="address-selector"
+              onClick={() => setShowAddressModal(true)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setShowAddressModal(true)
+                }
+              }}
+            >
+              <span>
+                {state.selectedAddress ? formatAddressForDisplay(state.selectedAddress) : "Adicionar endereço"}
+              </span>
               <ChevronDown size={16} />
             </div>
+
             <div className="notification-icon">
               <Bell size={24} />
-              {notifications > 0 && <span className="notification-badge">{notifications}</span>}
+              {state.notifications.length > 0 && (
+                <span className="notification-badge">{state.notifications.length}</span>
+              )}
             </div>
+
             <div className="cart-icon" onClick={toggleCart}>
               <ShoppingBag size={24} />
               <div className="cart-info">
-                <div className="cart-total">{cartTotal > 0 ? formatPrice(cartTotal) : "R$ 0,00"}</div>
+                <div className="cart-total">{state.cart.total > 0 ? formatPrice(state.cart.total) : "R$ 0,00"}</div>
                 <div className="cart-items">
-                  {cartItems} {cartItems === 1 ? "item" : "itens"}
+                  {state.cart.items.length} {state.cart.items.length === 1 ? "item" : "itens"}
                 </div>
               </div>
             </div>
 
-            {/* Menu do usuário */}
+            {/* User Menu */}
             <div className="user-menu-container">
               <button
                 className="user-menu-button"
@@ -1123,7 +594,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                     backgroundColor: "white",
                     border: "1px solid #e0e0e0",
                     borderRadius: "8px",
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                    boxShadow: "0 4px 12px rgb(255, 243, 243)",
                     minWidth: "200px",
                     zIndex: 1000,
                   }}
@@ -1131,7 +602,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                   <div
                     style={{
                       padding: "16px",
-                      borderBottom: "1px solid #f0f0f0",
+                      borderBottom: "1px solidrgb(214, 6, 6)",
                     }}
                   >
                     <div
@@ -1142,7 +613,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                         marginBottom: "4px",
                       }}
                     >
-                      {user?.nome} {user?.sobrenome}
+                      {user?.nome}
                     </div>
                     <div
                       style={{
@@ -1181,199 +652,69 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
           </div>
         </div>
       </header>
+
       <div className="green-line"></div>
 
       {/* Page Content */}
       <div className="content-area">
         {activeTab === "restaurantes" ? (
           <>
+            {/* Categories Section */}
             <div className="categories-section">
               <h2 className="section-title">Categorias</h2>
               <div className="categories-carousel">
-                <button className="carousel-arrow carousel-prev" id="category-prev-btn">
+                <button
+                  className="carousel-arrow carousel-prev"
+                  onClick={() => handleCarouselScroll(categoriesContainerRef, "left")}
+                  aria-label="Categorias anteriores"
+                >
                   <ChevronLeft size={24} />
                 </button>
-                <div
-                  className="categories-container"
-                  ref={categoriesContainerRef}
-                  style={{
-                    overflowX: "auto",
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
-                    WebkitOverflowScrolling: "touch",
-                    display: "flex",
-                  }}
-                >
+                <div className="categories-container" ref={categoriesContainerRef}>
                   <div className="categories-items">
-                    <div className="category-item" onClick={() => handleCategoryClick("Lanches")}>
-                      <div className="category-icon">{getCategoryIcon("Lanches")}</div>
-                      <span className="category-name">Lanches</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Pizza")}>
-                      <div className="category-icon">{getCategoryIcon("Pizza")}</div>
-                      <span className="category-name">Pizza</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Doces & Bolos")}>
-                      <div className="category-icon">{getCategoryIcon("Doces & Bolos")}</div>
-                      <span className="category-name">Doces & Bolos</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Japonesa")}>
-                      <div className="category-icon">{getCategoryIcon("Japonesa")}</div>
-                      <span className="category-name">Japonesa</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Brasileira")}>
-                      <div className="category-icon">{getCategoryIcon("Brasileira")}</div>
-                      <span className="category-name">Brasileira</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Açaí")}>
-                      <div className="category-icon">{getCategoryIcon("Açaí")}</div>
-                      <span className="category-name">Açaí</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Árabe")}>
-                      <div className="category-icon">{getCategoryIcon("Árabe")}</div>
-                      <span className="category-name">Árabe</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Chinesa")}>
-                      <div className="category-icon">{getCategoryIcon("Chinesa")}</div>
-                      <span className="category-name">Chinesa</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Sorvetes")}>
-                      <div className="category-icon">{getCategoryIcon("Sorvetes")}</div>
-                      <span className="category-name">Sorvetes</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Italiana")}>
-                      <div className="category-icon">{getCategoryIcon("Italiana")}</div>
-                      <span className="category-name">Italiana</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Vegetariana")}>
-                      <div className="category-icon">{getCategoryIcon("Vegetariana")}</div>
-                      <span className="category-name">Vegetariana</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Carnes")}>
-                      <div className="category-icon">{getCategoryIcon("Carnes")}</div>
-                      <span className="category-name">Carnes</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Salgados")}>
-                      <div className="category-icon">{getCategoryIcon("Salgados")}</div>
-                      <span className="category-name">Salgados</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Gourmet")}>
-                      <div className="category-icon">{getCategoryIcon("Gourmet")}</div>
-                      <span className="category-name">Gourmet</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Marmita")}>
-                      <div className="category-icon">{getCategoryIcon("Marmita")}</div>
-                      <span className="category-name">Marmita</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Pastel")}>
-                      <div className="category-icon">{getCategoryIcon("Pastel")}</div>
-                      <span className="category-name">Pastel</span>
-                    </div>
-                    <div className="category-item" onClick={() => handleCategoryClick("Padarias")}>
-                      <div className="category-icon">{getCategoryIcon("Padarias")}</div>
-                      <span className="category-name">Padarias</span>
-                    </div>
+                    {categories.map((category) => (
+                      <div
+                        key={category}
+                        className="category-item"
+                        onClick={() => handleCategoryClick(category)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            handleCategoryClick(category)
+                          }
+                        }}
+                      >
+                        <div className="category-icon">
+                          <CategoryIcon category={category} />
+                        </div>
+                        <span className="category-name">{category}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <button className="carousel-arrow carousel-next" id="category-next-btn">
+                <button
+                  className="carousel-arrow carousel-next"
+                  onClick={() => handleCarouselScroll(categoriesContainerRef, "right")}
+                  aria-label="Próximas categorias"
+                >
                   <ChevronRight size={24} />
                 </button>
               </div>
             </div>
 
-            {/* Free Delivery Products Carousel - APENAS para a aba Restaurantes */}
-            <div className="free-delivery-section">
-              <h2 className="section-title">Entrega Grátis</h2>
-              <div className="products-carousel">
-                <button className="carousel-arrow carousel-prev">
-                  <ChevronLeft size={24} />
-                </button>
-                <div className="products-container" ref={productsContainerRef}>
-                  {initialLoad && loading ? (
-                    <div className="loading-products">
-                      <p>Carregando produtos...</p>
-                    </div>
-                  ) : products.length > 0 && products.filter((p) => p.deliveryFee === "Grátis").length > 0 ? (
-                    <div className="products-items">
-                      {products
-                        .filter((p) => p.deliveryFee === "Grátis")
-                        .map((product) => (
-                          <div key={product.id} className="product-card">
-                            <div className="product-image">
-                              <img src={product.image || "/placeholder.svg?height=120&width=200"} alt={product.name} />
-                            </div>
-                            <div className="product-details">
-                              <h3 className="product-name">{product.name}</h3>
-                              <div className="product-restaurant">{product.restaurant}</div>
-                              <div className="product-price-row">
-                                <span className="product-price">{product.price}</span>
-                                <span className="delivery-badge">Grátis</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="empty-products">
-                      <p>Nenhum produto com entrega grátis disponível</p>
-                    </div>
-                  )}
-                </div>
-                <button className="carousel-arrow carousel-next">
-                  <ChevronRight size={24} />
-                </button>
-              </div>
-            </div>
-
-            {/* Restaurants Grid - APENAS para a aba Restaurantes */}
+            {/* Restaurants Grid */}
             <div className="restaurants-section">
               <h2 className="section-title">Lojas</h2>
-              {initialLoad && loading ? (
+              {state.loading.restaurants ? (
                 <div className="loading-state">
+                  <LoadingSpinner size="large" />
                   <p>Carregando restaurantes...</p>
                 </div>
-              ) : restaurants.length > 0 ? (
+              ) : state.restaurants.length > 0 ? (
                 <div className="restaurants-grid">
-                  {restaurants.map((restaurant) => (
-                    <div key={restaurant.id} className="restaurant-card">
-                      <div className="restaurant-card-image-container">
-                        <img
-                          src={restaurant.image || "/placeholder.svg?height=150&width=250"}
-                          alt={restaurant.name}
-                          className="restaurant-card-image"
-                        />
-                        {restaurant.featured && <div className="featured-badge">Destaque</div>}
-                      </div>
-                      <div className="restaurant-card-content">
-                        <h3 className="restaurant-card-name">{restaurant.name}</h3>
-                        <div className="restaurant-card-info">
-                          <div className="restaurant-card-rating">
-                            <span className="star-icon">★</span>
-                            <span>{restaurant.rating}</span>
-                          </div>
-                          <span className="restaurant-card-category">{restaurant.category}</span>
-                          <span className="restaurant-card-distance">{restaurant.distance}</span>
-                        </div>
-                        <div className="restaurant-card-delivery">
-                          <span className="restaurant-card-time">{restaurant.deliveryTime}</span>
-                          <span className="restaurant-card-fee">
-                            {restaurant.deliveryFee === "Grátis" ? (
-                              <span className="free-delivery-text">Grátis</span>
-                            ) : (
-                              restaurant.deliveryFee
-                            )}
-                          </span>
-                        </div>
-                        {restaurant.coupon && (
-                          <div className="restaurant-card-coupon">
-                            <span className="coupon-icon">
-                              <Ticket size={14} />
-                            </span>
-                            <span className="coupon-text">{restaurant.coupon}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                  {state.restaurants.map((restaurant) => (
+                    <RestaurantCard key={restaurant.id} restaurant={restaurant} />
                   ))}
                 </div>
               ) : (
@@ -1455,11 +796,10 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
         )}
       </div>
 
-      {/* Modal de Endereço */}
+      {/* Address Modal */}
       {showAddressModal && (
         <div className="modal-overlay" onClick={() => setShowAddressModal(false)}>
           <div className="address-modal" onClick={(e) => e.stopPropagation()}>
-            {/* Cabeçalho do Modal */}
             <div className="modal-header">
               <h2>
                 {addressModalStep === 1
@@ -1474,24 +814,28 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                   setShowAddressModal(false)
                   setAddressModalStep(1)
                 }}
+                aria-label="Fechar modal"
               >
                 <X size={24} />
               </button>
             </div>
 
-            {/* Conteúdo do Modal - Passo 1: Lista de Endereços */}
+            {/* Step 1: Address List */}
             {addressModalStep === 1 && (
               <div className="modal-content">
-                {loadingAddresses ? (
-                  <div className="loading-state">
+                {state.loading.addresses ? (
+                  <div style={{ padding: "40px", textAlign: "center" }}>
+                    <LoadingSpinner />
                     <p>Carregando endereços...</p>
                   </div>
-                ) : savedAddresses.length > 0 ? (
+                ) : state.addresses.length > 0 ? (
                   <div className="saved-addresses">
-                    {savedAddresses.map((address) => (
+                    {state.addresses.map((address) => (
                       <div
                         key={address.id}
-                        className={`saved-address-item ${selectedAddress && selectedAddress.id === address.id ? "selected" : ""}`}
+                        className={`saved-address-item ${
+                          state.selectedAddress && state.selectedAddress.id === address.id ? "selected" : ""
+                        }`}
                         onClick={() => selectSavedAddress(address)}
                       >
                         <div className="address-icon">
@@ -1515,7 +859,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                               className="set-default-button"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                setAddressAsDefault(address.id)
+                                actions.updateAddress(address.id, { ...address, isDefault: true })
                               }}
                             >
                               Definir como padrão
@@ -1525,6 +869,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                             className="delete-address-button"
                             onClick={(e) => deleteAddress(address.id, e)}
                             title="Excluir endereço"
+                            aria-label="Excluir endereço"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -1542,14 +887,18 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                   </div>
                 )}
 
-                <button className="add-address-button" onClick={() => setAddressModalStep(2)}>
+                <button
+                  className="add-address-button"
+                  onClick={() => setAddressModalStep(2)}
+                  disabled={state.loading.addresses}
+                >
                   <Plus size={20} />
-                  {savedAddresses.length > 0 ? "Adicionar novo endereço" : "Adicionar endereço"}
+                  {state.addresses.length > 0 ? "Adicionar novo endereço" : "Adicionar endereço"}
                 </button>
               </div>
             )}
 
-            {/* Conteúdo do Modal - Passo 2: Busca de Endereço */}
+            {/* Step 2: Address Search */}
             {addressModalStep === 2 && (
               <div className="modal-content">
                 <div className="address-search-container">
@@ -1565,7 +914,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                   </div>
 
                   <div className="address-map-container" ref={mapRef}>
-                    {/* O mapa do Google será renderizado aqui */}
+                    {/* Google Map will be rendered here */}
                   </div>
                 </div>
 
@@ -1583,12 +932,12 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
               </div>
             )}
 
-            {/* Conteúdo do Modal - Passo 3: Formulário de Endereço */}
+            {/* Step 3: Address Form */}
             {addressModalStep === 3 && (
               <div className="modal-content">
                 <div className="address-form">
                   <div className="address-label-selector">
-                    <div className="label-title">Identificação (opcional)</div>
+                    <div className="label-title">Identificação</div>
                     <div className="label-options">
                       <button
                         type="button"
@@ -1726,6 +1075,8 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                     className="modal-save-button"
                     onClick={saveNewAddress}
                     disabled={
+                      state.loading.addresses ||
+                      !newAddress.label ||
                       !newAddress.street ||
                       !newAddress.number ||
                       !newAddress.neighborhood ||
@@ -1733,7 +1084,14 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                       !newAddress.state
                     }
                   >
-                    Salvar endereço
+                    {state.loading.addresses ? (
+                      <>
+                        <LoadingSpinner size="small" color="white" />
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar endereço"
+                    )}
                   </button>
                 </div>
               </div>
@@ -1742,41 +1100,46 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
         </div>
       )}
 
-      {/* Sacola (Carrinho) */}
+      {/* Cart Sidebar */}
       {showCart && (
         <div className="cart-overlay" onClick={() => setShowCart(false)}>
           <div className="cart-sidebar" ref={cartRef} onClick={(e) => e.stopPropagation()}>
             <div className="cart-header">
               <h2>Sacola</h2>
-              <button className="close-cart" onClick={() => setShowCart(false)}>
+              <button className="close-cart" onClick={() => setShowCart(false)} aria-label="Fechar sacola">
                 <X size={24} />
               </button>
             </div>
 
             <div className="cart-content">
-              {cartProducts.length > 0 ? (
+              {state.cart.items.length > 0 ? (
                 <>
-                  <div className="cart-restaurant">
-                    {cartProducts[0]?.restaurant && (
+                  {state.cart.restaurant && (
+                    <div className="cart-restaurant">
                       <div className="restaurant-info">
-                        <h3>{cartProducts[0].restaurant}</h3>
+                        <h3>{state.cart.restaurant}</h3>
                         <p>Entrega em 30-45 min</p>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   <div className="cart-items-list">
-                    {cartProducts.map((product) => (
+                    {state.cart.items.map((product) => (
                       <div key={product.id} className="cart-item">
                         <div className="cart-item-image">
-                          <img src={product.image || "/placeholder.svg?height=60&width=60"} alt={product.name} />
+                          <LazyImage src={product.image} alt={product.name} />
                         </div>
                         <div className="cart-item-details">
                           <h4>{product.name}</h4>
                           <div className="cart-item-price">{product.price}</div>
 
                           <div className="cart-item-actions">
-                            <button type="button" className="remove-item" onClick={() => removeFromCart(product.id)}>
+                            <button
+                              type="button"
+                              className="remove-item"
+                              onClick={() => actions.removeFromCart(product.id)}
+                              aria-label={`Remover ${product.name} do carrinho`}
+                            >
                               <Trash2 size={16} />
                             </button>
 
@@ -1784,8 +1147,9 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                               <button
                                 type="button"
                                 className="quantity-btn decrease"
-                                onClick={() => decreaseQuantity(product.id)}
+                                onClick={() => actions.updateCartItem(product.id, product.quantity - 1)}
                                 disabled={product.quantity <= 1}
+                                aria-label="Diminuir quantidade"
                               >
                                 <Minus size={16} />
                               </button>
@@ -1793,7 +1157,8 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                               <button
                                 type="button"
                                 className="quantity-btn increase"
-                                onClick={() => increaseQuantity(product.id)}
+                                onClick={() => actions.updateCartItem(product.id, product.quantity + 1)}
+                                aria-label="Aumentar quantidade"
                               >
                                 <Plus size={16} />
                               </button>
@@ -1811,7 +1176,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                     </div>
                     <div className="summary-row">
                       <span>Taxa de entrega</span>
-                      <span>{formatPrice(deliveryFee)}</span>
+                      <span>{formatPrice(7.9)}</span>
                     </div>
                     <div className="summary-row total">
                       <span>Total</span>
@@ -1820,13 +1185,7 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
                   </div>
 
                   <div className="cart-footer">
-                    <button
-                      type="button"
-                      className="checkout-button"
-                      onClick={() =>
-                        onProceedToPayment(cartProducts, calculateTotal() - deliveryFee, deliveryFee, selectedAddress)
-                      }
-                    >
+                    <button type="button" className="checkout-button" onClick={() => navigate("/pagamento")}>
                       <span>Escolher forma de pagamento</span>
                       <ArrowRight size={20} />
                     </button>
@@ -1850,4 +1209,3 @@ const HomePage = ({ user, onLogout, onProceedToPayment }) => {
 }
 
 export default HomePage
-

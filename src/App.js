@@ -1,128 +1,99 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom"
+import React, { Suspense } from "react"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { AppProvider, useApp } from "./contexts/AppContext"
+import ErrorBoundary from "./shared/ErrorBoundary"
+import LoadingSpinner from "./shared/LoadingSpinner"
+import NotificationSystem from "./shared/NotificationSystem"
 import "./App.css"
-import HomePage from "./Components/HomePage/HomePage"
-import CategoryPage from "./Components/CategoryPage/CategoryPage"
-import LoginRegister from "./Components/LoginRegister/LoginRegister"
-import PaymentPage from "./Components/PaymentPage/PaymentPage"
 
-function App() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [showPayment, setShowPayment] = useState(false)
-  const [paymentData, setPaymentData] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+// Lazy loading dos componentes
+const HomePage = React.lazy(() => import("./Components/HomePage/HomePage"))
+const CategoryPage = React.lazy(() => import("./Components/CategoryPage/CategoryPage"))
+const LoginRegister = React.lazy(() => import("./Components/LoginRegister/LoginRegister"))
+const PaymentPage = React.lazy(() => import("./Components/PaymentPage/PaymentPage"))
 
-  // Verificar se há sessão salva no localStorage
-  useEffect(() => {
-    const savedUserData = localStorage.getItem("userData")
+// Componente de loading para Suspense
+const PageLoader = () => (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+      backgroundColor: "#f7f7f7",
+    }}
+  >
+    <LoadingSpinner size="large" />
+  </div>
+)
 
-    if (savedUserData) {
-      try {
-        const userData = JSON.parse(savedUserData)
-        setUser(userData)
-        setIsAuthenticated(true)
-      } catch (error) {
-        console.error("Erro ao recuperar dados do usuário:", error)
-        localStorage.removeItem("userData")
-      }
-    }
+// Componente principal da aplicação
+function AppContent() {
+  const { state, actions } = useApp()
 
-    setLoading(false)
-  }, [])
-
-  // Função para lidar com login bem-sucedido
-  const handleLoginSuccess = (userData) => {
-    setUser(userData)
-    setIsAuthenticated(true)
-    localStorage.setItem("userData", JSON.stringify(userData))
+  // Mostrar loading apenas por um tempo limitado
+  if (state.loading.auth) {
+    return <PageLoader />
   }
 
-  // Função para lidar com logout
-  const handleLogout = () => {
-    setUser(null)
-    setIsAuthenticated(false)
-    localStorage.removeItem("userData")
-    setShowPayment(false)
-    setPaymentData(null)
-  }
+  return (
+    <Router>
+      <div className="app">
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Rota de login - sempre acessível */}
+            <Route path="/login" element={state.isAuthenticated ? <Navigate to="/" replace /> : <LoginRegister />} />
 
-  // Função para proceder ao pagamento
-  const handleProceedToPayment = (cartProducts, cartTotal, deliveryFee, selectedAddress) => {
-    setPaymentData({
-      cartProducts,
-      cartTotal,
-      deliveryFee,
-      selectedAddress,
-    })
-    setShowPayment(true)
-  }
+            {/* Rotas protegidas */}
+            {state.isAuthenticated ? (
+              <>
+                <Route path="/" element={<HomePage user={state.user} onLogout={actions.logout} />} />
+                <Route path="/categoria/:category" element={<CategoryPage />} />
+                <Route
+                  path="/pagamento"
+                  element={
+                    <PaymentPage
+                      cartProducts={state.cart.items}
+                      cartTotal={state.cart.total}
+                      deliveryFee={7.9}
+                      selectedAddress={state.selectedAddress}
+                      onBack={() => window.history.back()}
+                    />
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </>
+            ) : (
+              <>
+                {/* Rotas públicas quando não autenticado */}
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<Navigate to="/login" replace />} />
+              </>
+            )}
+          </Routes>
+        </Suspense>
 
-  // Função para voltar da tela de pagamento
-  const handleBackFromPayment = () => {
-    setShowPayment(false)
-    setPaymentData(null)
-  }
-
-  // Mostrar loading enquanto verifica a sessão
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          fontSize: "18px",
-          color: "#717171",
-        }}
-      >
-        Carregando...
+        {/* Sistema de notificações */}
+        <NotificationSystem />
       </div>
-    )
-  }
+    </Router>
+  )
+}
 
-  // Se não estiver autenticado, mostrar LoginRegister
-  if (!isAuthenticated) {
-    return <LoginRegister onLoginSuccess={handleLoginSuccess} />
-  }
-
-  // Se estiver na tela de pagamento, mostrar PaymentPage
-  if (showPayment && paymentData) {
-    return (
-      <PaymentPage
-        cartProducts={paymentData.cartProducts}
-        cartTotal={paymentData.cartTotal}
-        deliveryFee={paymentData.deliveryFee}
-        selectedAddress={paymentData.selectedAddress}
-        onBack={handleBackFromPayment}
-      />
-    )
-  }
-
-  // Configuração das rotas (só acessível após autenticação)
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <HomePage user={user} onLogout={handleLogout} onProceedToPayment={handleProceedToPayment} />,
-    },
-    {
-      path: "/categoria/:category",
-      element: <CategoryPage />,
-    },
-    // Rota catch-all para redirecionar para home se a rota não existir
-    {
-      path: "*",
-      element: <Navigate to="/" replace />,
-    },
-  ])
-
-  return <RouterProvider router={router} />
+// Componente App principal com providers
+function App() {
+  return (
+    <ErrorBoundary>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </ErrorBoundary>
+  )
 }
 
 export default App
+
+
 
 
 

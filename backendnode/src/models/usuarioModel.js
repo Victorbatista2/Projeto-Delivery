@@ -1,4 +1,5 @@
 const { connect } = require("../config/db.js")
+const bcrypt = require("bcrypt")
 
 async function selectUsers() {
   const client = await connect()
@@ -32,8 +33,13 @@ async function findByEmail(email) {
 
 async function insertUsuarios(Usuario) {
   const client = await connect()
-
   try {
+    // Hash da senha se for cadastro local
+    let senhaHash = Usuario.senha
+    if (Usuario.senha && (!Usuario.authProvider || Usuario.authProvider === "local")) {
+      senhaHash = await bcrypt.hash(Usuario.senha, 10)
+    }
+
     // Para cadastro regular (sem OAuth)
     if (!Usuario.authProvider || Usuario.authProvider === "local") {
       const sql = `
@@ -41,11 +47,11 @@ async function insertUsuarios(Usuario) {
         VALUES ($1, $2, $3, $4, $5) 
         RETURNING *
       `
-      const values = [Usuario.nome, Usuario.telefone, Usuario.email, Usuario.senha, Usuario.ativo]
+      const values = [Usuario.nome, Usuario.telefone, Usuario.email, senhaHash, Usuario.ativo]
       const result = await client.query(sql, values)
       return result.rows[0]
     } else {
-      // Para cadastro via OAuth (Google/Facebook) - só se as colunas existirem
+      // Para cadastro via OAuth (Google/Facebook)
       const sql = `
         INSERT INTO Usuario(Nome, Telefone, Email, Senha, ativo, googleId, facebookId, profilePicture, authProvider) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
@@ -55,7 +61,7 @@ async function insertUsuarios(Usuario) {
         Usuario.nome,
         Usuario.telefone,
         Usuario.email,
-        Usuario.senha,
+        senhaHash,
         Usuario.ativo,
         Usuario.googleId || null,
         Usuario.facebookId || null,
@@ -111,6 +117,32 @@ async function deleteUsuario(id) {
   }
 }
 
+// Função para autenticar usuário
+async function autenticarUsuario(email, senha) {
+  const client = await connect()
+  try {
+    const sql = "SELECT * FROM Usuario WHERE email = $1 AND ativo = true"
+    const result = await client.query(sql, [email])
+
+    const usuario = result.rows[0]
+    if (!usuario) {
+      return null
+    }
+
+    // Verificar senha
+    const senhaCorreta = await bcrypt.compare(senha, usuario.senha)
+    if (!senhaCorreta) {
+      return null
+    }
+
+    // Remover senha do retorno
+    delete usuario.senha
+    return usuario
+  } finally {
+    client.end()
+  }
+}
+
 module.exports = {
   selectUsers,
   selectUser,
@@ -120,7 +152,5 @@ module.exports = {
   updateGoogleId,
   updateFacebookId,
   deleteUsuario,
+  autenticarUsuario,
 }
-
-
-

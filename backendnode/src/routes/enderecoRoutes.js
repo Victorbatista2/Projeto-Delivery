@@ -8,21 +8,21 @@ router.use((req, res, next) => {
 })
 
 // Rotas para endereços
-router.get("/usuario/:usuarioId", enderecoController.listar)
-router.get("/usuario/:usuarioId/padrao", enderecoController.buscarPadrao)
-router.get("/:id/usuario/:usuarioId", enderecoController.buscarPorId)
-router.post("/usuario/:usuarioId", enderecoController.criar)
-router.put("/:id/usuario/:usuarioId", enderecoController.atualizar)
-router.patch("/:id/usuario/:usuarioId/padrao", enderecoController.definirPadrao)
-router.delete("/:id/usuario/:usuarioId", enderecoController.deletar)
+router.get("/:usuarioId/enderecos", enderecoController.listarEnderecos)
+router.get("/:usuarioId/enderecos/:enderecoId", enderecoController.buscarEndereco)
+router.post("/:usuarioId/enderecos", enderecoController.criarEndereco)
+router.put("/:usuarioId/enderecos/:enderecoId", enderecoController.atualizarEndereco)
+router.delete("/:usuarioId/enderecos/:enderecoId", enderecoController.excluirEndereco)
+router.patch("/:usuarioId/enderecos/:enderecoId/padrao", enderecoController.definirPadrao)
 
 console.log("Rotas de endereço carregadas:")
-console.log("GET /api/enderecos/usuario/:usuarioId")
-console.log("GET /api/enderecos/usuario/:usuarioId/padrao")
-console.log("GET /api/enderecos/:id/usuario/:usuarioId")
-console.log("POST /api/enderecos/usuario/:usuarioId")
-console.log("PUT /api/enderecos/:id/usuario/:usuarioId")
-console.log("PATCH /api/enderecos/:id/usuario/:usuarioId/padrao")
-console.log("DELETE /api/enderecos/:id/usuario/:usuarioId")
+console.log("GET /api/usuarios/:usuarioId/enderecos")
+console.log("GET /api/usuarios/:usuarioId/enderecos/:enderecoId")
+console.log("POST /api/usuarios/:usuarioId/enderecos")
+console.log("PUT /api/usuarios/:usuarioId/enderecos/:enderecoId")
+console.log("DELETE /api/usuarios/:usuarioId/enderecos/:enderecoId")
+console.log("PATCH /api/usuarios/:usuarioId/enderecos/:enderecoId/padrao")
 
 module.exports = router
+
+

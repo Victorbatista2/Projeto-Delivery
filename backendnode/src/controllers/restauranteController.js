@@ -50,15 +50,9 @@ const restauranteController = {
   // Listar todos os restaurantes ativos
   listarTodos: async (req, res) => {
     try {
-      console.log("=== INICIANDO BUSCA DE RESTAURANTES ===")
-      console.log("Timestamp:", new Date().toISOString())
-
+      console.log("Buscando todos os restaurantes ativos...")
       const restaurantes = await restauranteModel.listarAtivos()
-      console.log(`Restaurantes encontrados no banco: ${restaurantes.length}`)
-
-      if (restaurantes.length > 0) {
-        console.log("Primeiro restaurante:", restaurantes[0])
-      }
+      console.log(`Encontrados ${restaurantes.length} restaurantes`)
 
       // Formatar dados para o frontend
       const restaurantesFormatados = restaurantes.map((restaurante) => ({
@@ -74,20 +68,13 @@ const restauranteController = {
         coupon: null,
       }))
 
-      console.log(`Enviando ${restaurantesFormatados.length} restaurantes formatados`)
-      console.log("=== FIM DA BUSCA DE RESTAURANTES ===")
-
       res.json(restaurantesFormatados)
     } catch (error) {
-      console.error("=== ERRO AO LISTAR RESTAURANTES ===")
-      console.error("Erro completo:", error)
-      console.error("Stack trace:", error.stack)
-
+      console.error("Erro ao listar restaurantes:", error)
       res.status(500).json({
         success: false,
         message: "Erro ao buscar restaurantes",
         error: error.message,
-        timestamp: new Date().toISOString(),
       })
     }
   },
@@ -96,11 +83,9 @@ const restauranteController = {
   buscarPorCategoria: async (req, res) => {
     try {
       const { categoria } = req.params
-      console.log(`=== BUSCANDO CATEGORIA: ${categoria} ===`)
-      console.log("Timestamp:", new Date().toISOString())
-
+      console.log(`Buscando restaurantes da categoria: ${categoria}`)
       const restaurantes = await restauranteModel.buscarPorCategoria(categoria)
-      console.log(`Restaurantes encontrados para categoria ${categoria}: ${restaurantes.length}`)
+      console.log(`Encontrados ${restaurantes.length} restaurantes na categoria ${categoria}`)
 
       // Formatar dados para o frontend
       const restaurantesFormatados = restaurantes.map((restaurante) => ({
@@ -116,21 +101,13 @@ const restauranteController = {
         coupon: null,
       }))
 
-      console.log(`Enviando ${restaurantesFormatados.length} restaurantes da categoria ${categoria}`)
-      console.log("=== FIM DA BUSCA POR CATEGORIA ===")
-
       res.json(restaurantesFormatados)
     } catch (error) {
-      console.error(`=== ERRO AO BUSCAR CATEGORIA ${req.params.categoria} ===`)
-      console.error("Erro completo:", error)
-      console.error("Stack trace:", error.stack)
-
+      console.error("Erro ao buscar por categoria:", error)
       res.status(500).json({
         success: false,
         message: "Erro ao buscar restaurantes por categoria",
         error: error.message,
-        categoria: req.params.categoria,
-        timestamp: new Date().toISOString(),
       })
     }
   },
@@ -200,3 +177,5 @@ const restauranteController = {
 }
 
 module.exports = restauranteController
+
+

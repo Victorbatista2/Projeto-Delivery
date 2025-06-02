@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Search, ShoppingBag, Bell, ChevronDown, ChevronLeft, Filter, Star, Clock, Ticket } from "lucide-react"
+import LoadingSpinner from "../../shared/LoadingSpinner"
+import LazyImage from "../../shared/LazyImage"
 import "./CategoryPage.css"
 
 const CategoryPage = () => {
@@ -14,7 +16,6 @@ const CategoryPage = () => {
   const [notifications, setNotifications] = useState(0)
   const [cartItems, setCartItems] = useState(0)
   const [cartTotal, setCartTotal] = useState(0)
-  const [selectedAddress, setSelectedAddress] = useState(null)
 
   // Formatar o nome da categoria para exibição
   const formatCategoryName = (categorySlug) => {
@@ -29,64 +30,30 @@ const CategoryPage = () => {
   // Buscar restaurantes da categoria
   useEffect(() => {
     const fetchRestaurants = async () => {
-      if (!categoryName) return
-
       setLoading(true)
       try {
-        console.log(`Buscando restaurantes da categoria: ${categoryName}`)
+        // Buscar restaurantes da categoria específica
+        const response = await fetch(`http://localhost:3001/api/restaurantes/categoria/${categoryName}`)
 
-        // Função para fazer requisição com retry automático
-        const fetchWithRetry = async (url, maxRetries = 3) => {
-          for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-              const controller = new AbortController()
-              const timeoutId = setTimeout(() => controller.abort(), 8000)
-
-              const response = await fetch(url, {
-                signal: controller.signal,
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              })
-
-              clearTimeout(timeoutId)
-
-              if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-              }
-
-              const data = await response.json()
-              return Array.isArray(data) ? data : []
-            } catch (error) {
-              console.warn(`Tentativa ${attempt}/${maxRetries} falhou:`, error.message)
-              if (attempt === maxRetries) throw error
-              await new Promise((resolve) => setTimeout(resolve, 1000 * attempt))
-            }
-          }
+        if (response.ok) {
+          const data = await response.json()
+          setRestaurants(Array.isArray(data) ? data : [])
+        } else {
+          console.error("Erro ao buscar restaurantes:", response.status)
+          setRestaurants([])
         }
-
-        const data = await fetchWithRetry(
-          `http://localhost:3001/api/restaurantes/categoria/${encodeURIComponent(categoryName)}`,
-        )
-
-        console.log(`${data.length} restaurantes encontrados para ${categoryName}`)
-        setRestaurants(data)
       } catch (error) {
-        console.error("Erro ao buscar restaurantes da categoria:", error)
+        console.error("Erro ao buscar restaurantes:", error)
         setRestaurants([])
       } finally {
         setLoading(false)
       }
     }
 
-    fetchRestaurants()
-  }, [categoryName])
-
-  // Formatar o endereço para exibição
-  const formatAddressForDisplay = (address) => {
-    if (!address) return ""
-    return `${address.street}, ${address.number}`
-  }
+    if (categoryName) {
+      fetchRestaurants()
+    }
+  }, [category, categoryName])
 
   // Formatar preço para exibição
   const formatPrice = (price) => {
@@ -193,13 +160,14 @@ const CategoryPage = () => {
         <div className="restaurants-list">
           {loading ? (
             <div className="loading-state">
+              <LoadingSpinner size="large" />
               <p>Carregando restaurantes...</p>
             </div>
           ) : restaurants.length > 0 ? (
             restaurants.map((restaurant) => (
               <div key={restaurant.id} className="restaurant-item">
                 <div className="restaurant-logo">
-                  <img src={restaurant.image || "/placeholder.svg?height=100&width=100"} alt={restaurant.name} />
+                  <LazyImage src={restaurant.image || "/placeholder.svg?height=100&width=100"} alt={restaurant.name} />
                   {restaurant.featured && <div className="featured-badge"></div>}
                 </div>
                 <div className="restaurant-info">
@@ -250,7 +218,4 @@ const CategoryPage = () => {
 }
 
 export default CategoryPage
-
-
-
 

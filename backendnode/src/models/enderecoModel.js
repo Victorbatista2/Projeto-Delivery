@@ -1,137 +1,76 @@
 const { connect } = require("../config/db.js")
 
-// Buscar todos os endereços de um usuário
+// Buscar endereços de um usuário
 async function buscarEnderecosPorUsuario(usuarioId) {
   const client = await connect()
   try {
-    // Verificar primeiro se a tabela existe e qual é o nome correto
-    const checkTable = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND (table_name = 'endereco' OR table_name = 'Endereco' OR table_name = 'enderecos')
-    `)
-
-    console.log("Tabelas de endereço encontradas:", checkTable.rows)
-
-    if (checkTable.rows.length === 0) {
-      throw new Error("Nenhuma tabela de endereço encontrada no banco de dados")
-    }
-
-    const tableName = checkTable.rows[0].table_name
-    console.log("Usando tabela:", tableName)
-
     const sql = `
-      SELECT id, rotulo, rua, numero, complemento, bairro, cidade, estado, cep, padrao, ativo
-      FROM ${tableName} 
+      SELECT * FROM Endereco 
       WHERE usuario_id = $1 AND ativo = true 
-      ORDER BY padrao DESC, created_at ASC
+      ORDER BY padrao DESC, created_at DESC
     `
     const result = await client.query(sql, [usuarioId])
     return result.rows
-  } catch (error) {
-    console.error("Erro ao buscar endereços por usuário:", error)
-    throw error
   } finally {
     client.end()
   }
 }
 
 // Buscar endereço por ID
-async function buscarEnderecoPorId(id, usuarioId) {
+async function buscarEnderecoPorId(enderecoId, usuarioId) {
   const client = await connect()
   try {
-    // Verificar qual tabela usar
-    const checkTable = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND (table_name = 'endereco' OR table_name = 'Endereco' OR table_name = 'enderecos')
-    `)
-
-    if (checkTable.rows.length === 0) {
-      throw new Error("Nenhuma tabela de endereço encontrada no banco de dados")
-    }
-
-    const tableName = checkTable.rows[0].table_name
-
     const sql = `
-      SELECT id, rotulo, rua, numero, complemento, bairro, cidade, estado, cep, padrao, ativo
-      FROM ${tableName} 
+      SELECT * FROM Endereco 
       WHERE id = $1 AND usuario_id = $2 AND ativo = true
     `
-    const result = await client.query(sql, [id, usuarioId])
+    const result = await client.query(sql, [enderecoId, usuarioId])
     return result.rows[0]
-  } catch (error) {
-    console.error("Erro ao buscar endereço por ID:", error)
-    throw error
   } finally {
     client.end()
   }
 }
 
-// Inserir novo endereço
-async function inserirEndereco(endereco) {
+// Criar novo endereço
+async function criarEndereco(enderecoData) {
   const client = await connect()
 
   try {
     await client.query("BEGIN")
 
-    // Verificar qual tabela usar
-    const checkTable = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND (table_name = 'endereco' OR table_name = 'Endereco' OR table_name = 'enderecos')
-    `)
-
-    console.log("Tabelas de endereço encontradas:", checkTable.rows)
-
-    if (checkTable.rows.length === 0) {
-      throw new Error(
-        "Nenhuma tabela de endereço encontrada no banco de dados. Verifique se a tabela existe e tem o nome correto.",
-      )
+    // Se este endereço for padrão, remover padrão dos outros
+    if (enderecoData.padrao) {
+      await client.query("UPDATE Endereco SET padrao = false WHERE usuario_id = $1", [enderecoData.usuario_id])
     }
 
-    const tableName = checkTable.rows[0].table_name
-    console.log("Usando tabela:", tableName)
-
-    // Se este for o primeiro endereço do usuário, definir como padrão
-    const countSql = `SELECT COUNT(*) as total FROM ${tableName} WHERE usuario_id = $1 AND ativo = true`
-    const countResult = await client.query(countSql, [endereco.usuarioId])
-    const isFirstAddress = Number.parseInt(countResult.rows[0].total) === 0
-
     const sql = `
-      INSERT INTO ${tableName}(
-        usuario_id, rotulo, rua, numero, complemento, bairro, 
-        cidade, estado, cep, padrao, ativo
-      ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
-      RETURNING id, rotulo, rua, numero, complemento, bairro, cidade, estado, cep, padrao, ativo
+      INSERT INTO Endereco (
+        usuario_id, rotulo, cep, rua, numero, complemento, 
+        bairro, cidade, estado, padrao, ativo, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+      RETURNING *
     `
 
     const values = [
-      endereco.usuarioId,
-      endereco.rotulo,
-      endereco.rua,
-      endereco.numero,
-      endereco.complemento || null,
-      endereco.bairro,
-      endereco.cidade,
-      endereco.estado,
-      endereco.cep,
-      endereco.padrao || isFirstAddress,
+      enderecoData.usuario_id,
+      enderecoData.rotulo,
+      enderecoData.cep,
+      enderecoData.rua,
+      enderecoData.numero,
+      enderecoData.complemento,
+      enderecoData.bairro,
+      enderecoData.cidade,
+      enderecoData.estado,
+      enderecoData.padrao || false,
       true,
     ]
 
-    console.log("Inserindo endereço com valores:", values)
     const result = await client.query(sql, values)
-
     await client.query("COMMIT")
+
     return result.rows[0]
   } catch (error) {
     await client.query("ROLLBACK")
-    console.error("Erro ao inserir endereço:", error)
     throw error
   } finally {
     client.end()
@@ -139,208 +78,103 @@ async function inserirEndereco(endereco) {
 }
 
 // Atualizar endereço
-async function atualizarEndereco(id, endereco, usuarioId) {
+async function atualizarEndereco(enderecoId, usuarioId, enderecoData) {
   const client = await connect()
 
   try {
     await client.query("BEGIN")
 
-    // Verificar qual tabela usar
-    const checkTable = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND (table_name = 'endereco' OR table_name = 'Endereco' OR table_name = 'enderecos')
-    `)
-
-    if (checkTable.rows.length === 0) {
-      throw new Error("Nenhuma tabela de endereço encontrada no banco de dados")
+    // Se este endereço for padrão, remover padrão dos outros
+    if (enderecoData.padrao) {
+      await client.query("UPDATE Endereco SET padrao = false WHERE usuario_id = $1 AND id != $2", [
+        usuarioId,
+        enderecoId,
+      ])
     }
 
-    const tableName = checkTable.rows[0].table_name
-
     const sql = `
-      UPDATE ${tableName} SET
+      UPDATE Endereco SET
         rotulo = $1,
-        rua = $2,
-        numero = $3,
-        complemento = $4,
-        bairro = $5,
-        cidade = $6,
-        estado = $7,
-        cep = $8,
+        cep = $2,
+        rua = $3,
+        numero = $4,
+        complemento = $5,
+        bairro = $6,
+        cidade = $7,
+        estado = $8,
         padrao = $9,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = $10 AND usuario_id = $11 AND ativo = true
-      RETURNING id, rotulo, rua, numero, complemento, bairro, cidade, estado, cep, padrao, ativo
+        updated_at = NOW()
+      WHERE id = $10 AND usuario_id = $11
+      RETURNING *
     `
 
     const values = [
-      endereco.rotulo,
-      endereco.rua,
-      endereco.numero,
-      endereco.complemento || null,
-      endereco.bairro,
-      endereco.cidade,
-      endereco.estado,
-      endereco.cep,
-      endereco.padrao || false,
-      id,
+      enderecoData.rotulo,
+      enderecoData.cep,
+      enderecoData.rua,
+      enderecoData.numero,
+      enderecoData.complemento,
+      enderecoData.bairro,
+      enderecoData.cidade,
+      enderecoData.estado,
+      enderecoData.padrao || false,
+      enderecoId,
       usuarioId,
     ]
 
     const result = await client.query(sql, values)
-
     await client.query("COMMIT")
+
     return result.rows[0]
   } catch (error) {
     await client.query("ROLLBACK")
-    console.error("Erro ao atualizar endereço:", error)
     throw error
+  } finally {
+    client.end()
+  }
+}
+
+// Excluir endereço (soft delete)
+async function excluirEndereco(enderecoId, usuarioId) {
+  const client = await connect()
+  try {
+    const sql = `
+      UPDATE Endereco SET 
+        ativo = false, 
+        updated_at = NOW() 
+      WHERE id = $1 AND usuario_id = $2
+    `
+    await client.query(sql, [enderecoId, usuarioId])
   } finally {
     client.end()
   }
 }
 
 // Definir endereço como padrão
-async function definirEnderecoPadrao(id, usuarioId) {
+async function definirEnderecoPadrao(enderecoId, usuarioId) {
   const client = await connect()
 
   try {
     await client.query("BEGIN")
 
-    // Verificar qual tabela usar
-    const checkTable = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND (table_name = 'endereco' OR table_name = 'Endereco' OR table_name = 'enderecos')
-    `)
-
-    if (checkTable.rows.length === 0) {
-      throw new Error("Nenhuma tabela de endereço encontrada no banco de dados")
-    }
-
-    const tableName = checkTable.rows[0].table_name
-
     // Remover padrão de todos os endereços do usuário
-    await client.query(`UPDATE ${tableName} SET padrao = false WHERE usuario_id = $1 AND ativo = true`, [usuarioId])
+    await client.query("UPDATE Endereco SET padrao = false WHERE usuario_id = $1", [usuarioId])
 
     // Definir o endereço específico como padrão
     const sql = `
-      UPDATE ${tableName} SET 
-        padrao = true,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1 AND usuario_id = $2 AND ativo = true
-      RETURNING id, rotulo, rua, numero, complemento, bairro, cidade, estado, cep, padrao, ativo
-    `
-
-    const result = await client.query(sql, [id, usuarioId])
-
-    await client.query("COMMIT")
-    return result.rows[0]
-  } catch (error) {
-    await client.query("ROLLBACK")
-    console.error("Erro ao definir endereço padrão:", error)
-    throw error
-  } finally {
-    client.end()
-  }
-}
-
-// Deletar endereço (soft delete)
-async function deletarEndereco(id, usuarioId) {
-  const client = await connect()
-
-  try {
-    await client.query("BEGIN")
-
-    // Verificar qual tabela usar
-    const checkTable = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND (table_name = 'endereco' OR table_name = 'Endereco' OR table_name = 'enderecos')
-    `)
-
-    if (checkTable.rows.length === 0) {
-      throw new Error("Nenhuma tabela de endereço encontrada no banco de dados")
-    }
-
-    const tableName = checkTable.rows[0].table_name
-
-    // Verificar se é o endereço padrão
-    const checkSql = `SELECT padrao FROM ${tableName} WHERE id = $1 AND usuario_id = $2 AND ativo = true`
-    const checkResult = await client.query(checkSql, [id, usuarioId])
-
-    if (checkResult.rows.length === 0) {
-      throw new Error("Endereço não encontrado")
-    }
-
-    const isPadrao = checkResult.rows[0].padrao
-
-    // Deletar o endereço (soft delete)
-    const deleteSql = `
-      UPDATE ${tableName} SET 
-        ativo = false,
-        updated_at = CURRENT_TIMESTAMP
+      UPDATE Endereco SET 
+        padrao = true, 
+        updated_at = NOW() 
       WHERE id = $1 AND usuario_id = $2
+      RETURNING *
     `
-    await client.query(deleteSql, [id, usuarioId])
 
-    // Se era o endereço padrão, definir outro como padrão
-    if (isPadrao) {
-      const newDefaultSql = `
-        UPDATE ${tableName} SET 
-          padrao = true,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE usuario_id = $1 AND ativo = true AND id = (
-          SELECT id FROM ${tableName} 
-          WHERE usuario_id = $1 AND ativo = true 
-          ORDER BY created_at ASC 
-          LIMIT 1
-        )
-      `
-      await client.query(newDefaultSql, [usuarioId])
-    }
-
+    const result = await client.query(sql, [enderecoId, usuarioId])
     await client.query("COMMIT")
-  } catch (error) {
-    await client.query("ROLLBACK")
-    console.error("Erro ao deletar endereço:", error)
-    throw error
-  } finally {
-    client.end()
-  }
-}
 
-// Buscar endereço padrão do usuário
-async function buscarEnderecoPadrao(usuarioId) {
-  const client = await connect()
-  try {
-    // Verificar qual tabela usar
-    const checkTable = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND (table_name = 'endereco' OR table_name = 'Endereco' OR table_name = 'enderecos')
-    `)
-
-    if (checkTable.rows.length === 0) {
-      throw new Error("Nenhuma tabela de endereço encontrada no banco de dados")
-    }
-
-    const tableName = checkTable.rows[0].table_name
-
-    const sql = `
-      SELECT id, rotulo, rua, numero, complemento, bairro, cidade, estado, cep, padrao, ativo
-      FROM ${tableName} 
-      WHERE usuario_id = $1 AND padrao = true AND ativo = true
-    `
-    const result = await client.query(sql, [usuarioId])
     return result.rows[0]
   } catch (error) {
-    console.error("Erro ao buscar endereço padrão:", error)
+    await client.query("ROLLBACK")
     throw error
   } finally {
     client.end()
@@ -350,12 +184,9 @@ async function buscarEnderecoPadrao(usuarioId) {
 module.exports = {
   buscarEnderecosPorUsuario,
   buscarEnderecoPorId,
-  inserirEndereco,
+  criarEndereco,
   atualizarEndereco,
+  excluirEndereco,
   definirEnderecoPadrao,
-  deletarEndereco,
-  buscarEnderecoPadrao,
 }
-
-
 
