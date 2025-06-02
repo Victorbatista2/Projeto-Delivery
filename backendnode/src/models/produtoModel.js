@@ -1,12 +1,8 @@
-const { connect } = require("../config/db.js")
+const { pool, transaction } = require("../config/db.js")
 
 // Cadastrar novo produto
 async function cadastrar(produto) {
-  const client = await connect()
-
-  try {
-    await client.query("BEGIN")
-
+  return await transaction(async (client) => {
     // Inserir produto na tabela produto
     const sqlProduto = `
       INSERT INTO produto(
@@ -62,80 +58,55 @@ async function cadastrar(produto) {
       }
     }
 
-    await client.query("COMMIT")
     return produtoInserido
-  } catch (error) {
-    await client.query("ROLLBACK")
-    throw error
-  } finally {
-    client.end()
-  }
+  })
 }
 
 // Listar produtos por restaurante
 async function listarPorRestaurante(restauranteId) {
-  const client = await connect()
-  try {
-    const sql = `
-      SELECT p.*, r.nome_restaurante, c.nome as categoria_nome
-      FROM produto p
-      JOIN restaurante r ON p.id_restaurante = r.id
-      LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
-      LEFT JOIN categoria c ON pc.id_categoria = c.id_categoria
-      WHERE p.id_restaurante = $1 
-      ORDER BY c.nome, p.nome
-    `
-    const result = await client.query(sql, [restauranteId])
-    return result.rows
-  } finally {
-    client.end()
-  }
+  const sql = `
+    SELECT p.*, r.nome_restaurante, c.nome as categoria_nome
+    FROM produto p
+    JOIN restaurante r ON p.id_restaurante = r.id
+    LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
+    LEFT JOIN categoria c ON pc.id_categoria = c.id_categoria
+    WHERE p.id_restaurante = $1 
+    ORDER BY c.nome, p.nome
+  `
+  const result = await pool.query(sql, [restauranteId])
+  return result.rows
 }
 
 // Listar produtos disponíveis por restaurante
 async function listarDisponiveis(restauranteId) {
-  const client = await connect()
-  try {
-    const sql = `
-      SELECT p.*, c.nome as categoria_nome
-      FROM produto p
-      LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
-      LEFT JOIN categoria c ON pc.id_categoria = c.id_categoria
-      WHERE p.id_restaurante = $1 AND p.ativo = true 
-      ORDER BY c.nome, p.nome
-    `
-    const result = await client.query(sql, [restauranteId])
-    return result.rows
-  } finally {
-    client.end()
-  }
+  const sql = `
+    SELECT p.*, c.nome as categoria_nome
+    FROM produto p
+    LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
+    LEFT JOIN categoria c ON pc.id_categoria = c.id_categoria
+    WHERE p.id_restaurante = $1 AND p.ativo = true 
+    ORDER BY c.nome, p.nome
+  `
+  const result = await pool.query(sql, [restauranteId])
+  return result.rows
 }
 
 // Buscar produto por ID
 async function buscarPorId(id) {
-  const client = await connect()
-  try {
-    const sql = `
-      SELECT p.*, c.nome as categoria_nome
-      FROM produto p
-      LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
-      LEFT JOIN categoria c ON pc.id_categoria = c.id_categoria
-      WHERE p.id_produto = $1
-    `
-    const result = await client.query(sql, [id])
-    return result.rows[0]
-  } finally {
-    client.end()
-  }
+  const sql = `
+    SELECT p.*, c.nome as categoria_nome
+    FROM produto p
+    LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
+    LEFT JOIN categoria c ON pc.id_categoria = c.id_categoria
+    WHERE p.id_produto = $1
+  `
+  const result = await pool.query(sql, [id])
+  return result.rows[0]
 }
 
 // Atualizar produto
 async function atualizar(id, produto) {
-  const client = await connect()
-
-  try {
-    await client.query("BEGIN")
-
+  return await transaction(async (client) => {
     const sql = `
       UPDATE produto SET
         nome = $1,
@@ -157,54 +128,33 @@ async function atualizar(id, produto) {
     ]
 
     await client.query(sql, values)
-    await client.query("COMMIT")
-  } catch (error) {
-    await client.query("ROLLBACK")
-    throw error
-  } finally {
-    client.end()
-  }
+  })
 }
 
 // Deletar produto
 async function deletar(id, restauranteId) {
-  const client = await connect()
-  try {
-    const sql = "DELETE FROM produto WHERE id_produto = $1 AND id_restaurante = $2"
-    await client.query(sql, [id, restauranteId])
-  } finally {
-    client.end()
-  }
+  const sql = "DELETE FROM produto WHERE id_produto = $1 AND id_restaurante = $2"
+  await pool.query(sql, [id, restauranteId])
 }
 
 // Alterar disponibilidade
 async function alterarDisponibilidade(id, disponivel, restauranteId) {
-  const client = await connect()
-  try {
-    const sql = "UPDATE produto SET ativo = $1 WHERE id_produto = $2 AND id_restaurante = $3"
-    await client.query(sql, [disponivel, id, restauranteId])
-  } finally {
-    client.end()
-  }
+  const sql = "UPDATE produto SET ativo = $1 WHERE id_produto = $2 AND id_restaurante = $3"
+  await pool.query(sql, [disponivel, id, restauranteId])
 }
 
 // Buscar produtos por categoria
 async function buscarPorCategoria(categoria, restauranteId) {
-  const client = await connect()
-  try {
-    const sql = `
-      SELECT p.*, c.nome as categoria_nome
-      FROM produto p
-      LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
-      LEFT JOIN categoria c ON pc.id_categoria = c.id_categoria
-      WHERE c.nome ILIKE $1 AND p.id_restaurante = $2 AND p.ativo = true
-      ORDER BY p.nome
-    `
-    const result = await client.query(sql, [`%${categoria}%`, restauranteId])
-    return result.rows
-  } finally {
-    client.end()
-  }
+  const sql = `
+    SELECT p.*, c.nome as categoria_nome
+    FROM produto p
+    LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
+    LEFT JOIN categoria c ON pc.id_categoria = c.id_categoria
+    WHERE c.nome ILIKE $1 AND p.id_restaurante = $2 AND p.ativo = true
+    ORDER BY p.nome
+  `
+  const result = await pool.query(sql, [`%${categoria}%`, restauranteId])
+  return result.rows
 }
 
 module.exports = {
@@ -217,6 +167,3 @@ module.exports = {
   alterarDisponibilidade,
   buscarPorCategoria,
 }
-
-
-
