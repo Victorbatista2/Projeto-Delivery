@@ -10,8 +10,7 @@ const CadastroProduto = ({ restauranteId, onProdutoAdicionado }) => {
     categoriaProduto: "",
     tempoPreparo: "",
     ingredientes: "",
-    informacoesNutricionais: "",
-    imagemUrl: "",
+    imagemFile: null,
     disponivel: true,
   })
 
@@ -54,6 +53,25 @@ const CadastroProduto = ({ restauranteId, onProdutoAdicionado }) => {
         ...errors,
         [name]: null,
       })
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Verificar se é uma imagem
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          setFormData({
+            ...formData,
+            imagemFile: event.target.result,
+          })
+        }
+        reader.readAsDataURL(file)
+      } else {
+        alert("Por favor, selecione apenas arquivos de imagem.")
+      }
     }
   }
 
@@ -101,6 +119,7 @@ const CadastroProduto = ({ restauranteId, onProdutoAdicionado }) => {
         restauranteId: restauranteId,
         preco: Number.parseFloat(formData.preco),
         tempoPreparo: formData.tempoPreparo ? Number.parseInt(formData.tempoPreparo) : 30,
+        imagemUrl: formData.imagemFile, // Enviar a imagem em base64
       }
 
       const response = await fetch("http://localhost:3001/api/produtos", {
@@ -125,8 +144,7 @@ const CadastroProduto = ({ restauranteId, onProdutoAdicionado }) => {
         categoriaProduto: "",
         tempoPreparo: "",
         ingredientes: "",
-        informacoesNutricionais: "",
-        imagemUrl: "",
+        imagemFile: null,
         disponivel: true,
       })
 
@@ -243,27 +261,22 @@ const CadastroProduto = ({ restauranteId, onProdutoAdicionado }) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="imagemUrl">URL da Imagem</label>
-          <input
-            type="url"
-            id="imagemUrl"
-            name="imagemUrl"
-            value={formData.imagemUrl}
-            onChange={handleChange}
-            placeholder="https://exemplo.com/imagem.jpg"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="informacoesNutricionais">Informações Nutricionais</label>
-          <textarea
-            id="informacoesNutricionais"
-            name="informacoesNutricionais"
-            value={formData.informacoesNutricionais}
-            onChange={handleChange}
-            placeholder="Calorias, proteínas, carboidratos..."
-            rows={2}
-          />
+          <label htmlFor="imagemFile">Imagem do Produto</label>
+          <input type="file" id="imagemFile" name="imagemFile" onChange={handleFileChange} accept="image/*" />
+          {formData.imagemFile && (
+            <div style={{ marginTop: "10px" }}>
+              <img
+                src={formData.imagemFile || "/placeholder.svg"}
+                alt="Preview"
+                style={{
+                  maxWidth: "200px",
+                  maxHeight: "150px",
+                  objectFit: "cover",
+                  borderRadius: "4px",
+                }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="form-group checkbox-group">
