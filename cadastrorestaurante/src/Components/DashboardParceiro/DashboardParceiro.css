@@ -581,3 +581,259 @@
     flex-direction: column;
   }
 }
+
+.produto-card-improved {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-height: 120px;
+}
+
+.produto-card-improved:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.produto-info-container {
+  flex: 1;
+  padding-right: 1.5rem;
+}
+
+.produto-nome {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.produto-nome:hover {
+  color: #ea1d2c;
+}
+
+.produto-descricao {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.produto-preco {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.75rem 0;
+}
+
+.produto-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.produto-status.ativo {
+  background: #d4edda;
+  color: #155724;
+}
+
+.produto-status.inativo {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.produto-image-container {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.produto-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.produto-image:hover {
+  transform: scale(1.05);
+}
+
+.produto-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.produto-actions button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-edit {
+  background: #007bff;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #0056b3;
+}
+
+.btn-toggle {
+  color: white;
+}
+
+.btn-enable {
+  background: #28a745;
+}
+
+.btn-enable:hover {
+  background: #1e7e34;
+}
+
+.btn-disable {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-disable:hover {
+  background: #e0a800;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #c82333;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-image {
+  width: 100%;
+  max-width: 300px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.modal-details p {
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.modal-details strong {
+  color: #333;
+}
+
+/* Grid layout adjustment */
+.produtos-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .produto-card-improved {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .produto-info-container {
+    padding-right: 0;
+    padding-bottom: 1rem;
+  }
+
+  .produto-image-container {
+    width: 100%;
+    max-width: 200px;
+    height: 150px;
+  }
+
+  .produto-actions {
+    justify-content: center;
+  }
+}
