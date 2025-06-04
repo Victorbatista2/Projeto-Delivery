@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useApp } from "../../contexts/AppContext"
 import LoadingSpinner from "../../shared/LoadingSpinner"
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google"
 import "./LoginRegister.css"
 
 const LoginRegister = () => {
@@ -16,22 +17,6 @@ const LoginRegister = () => {
   })
 
   useEffect(() => {
-    const loadGoogleScript = () => {
-      const script = document.createElement("script")
-      script.src = "https://accounts.google.com/gsi/client"
-      script.async = true
-      script.defer = true
-      document.body.appendChild(script)
-
-      script.onload = () => {
-        window.google?.accounts.id.initialize({
-          client_id: "474311907571-g0d6vjrjgatf3d0b7do9fq6cm9u5par1.apps.googleusercontent.com",
-          callback: handleGoogleResponse,
-        })
-      }
-    }
-
-    loadGoogleScript()
     loadFacebookSDK()
   }, [])
 
@@ -81,29 +66,47 @@ const LoginRegister = () => {
     }
   }
 
-  const handleGoogleLogin = () => {
-    window.google?.accounts.id.prompt()
-  }
-
-  const handleGoogleResponse = async (response) => {
+  const handleGoogleSuccess = async (credentialResponse) => {
     try {
+      console.log("Token recebido:", credentialResponse.credential)
+
       const result = await fetch("http://localhost:3001/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: response.credential }),
+        body: JSON.stringify({ token: credentialResponse.credential }),
       })
 
       const data = await result.json()
       if (!result.ok) throw new Error(data.message || "Falha no login com Google")
 
-      // Simular login bem-sucedido
-      actions.login({ email: data.usuario.email, senha: "google_auth" })
+      // Armazenar o token JWT
+      localStorage.setItem("authToken", data.token)
+
+      // Login bem-sucedido - usar setUser diretamente em vez de actions.login
+      actions.setUser({
+        ...data.usuario,
+        token: data.token,
+      })
+
+      actions.addNotification({
+        type: "success",
+        message: "Login com Google realizado com sucesso!",
+      })
     } catch (error) {
+      console.error("Erro no login com Google:", error)
       actions.addNotification({
         type: "error",
-        message: error.message,
+        message: error.message || "Erro no login com Google",
       })
     }
+  }
+
+  const handleGoogleError = () => {
+    console.error("Falha no login com o Google")
+    actions.addNotification({
+      type: "error",
+      message: "Falha no login com Google",
+    })
   }
 
   const handleFacebookLogin = () => {
@@ -139,8 +142,13 @@ const LoginRegister = () => {
         const data = await result.json()
         if (!result.ok) throw new Error(data.message || "Falha no login com Facebook")
 
-        // Simular login bem-sucedido
-        actions.login({ email: data.usuario.email, senha: "facebook_auth" })
+        // Login bem-sucedido
+        actions.setUser({ email: data.usuario.email, senha: "facebook_auth" })
+
+        actions.addNotification({
+          type: "success",
+          message: "Login com Facebook realizado com sucesso!",
+        })
       })
     } catch (error) {
       actions.addNotification({
@@ -151,131 +159,134 @@ const LoginRegister = () => {
   }
 
   return (
-    <div className="container">
-      <div className="header">
-        <div className="text">{formState}</div>
-        <div className="underline"></div>
-      </div>
+    <GoogleOAuthProvider clientId="474311907571-g0d6vjrjgatf3d0b7do9fq6cm9u5par1.apps.googleusercontent.com">
+      <div className="container">
+        <div className="header">
+          <div className="text">{formState}</div>
+          <div className="underline"></div>
+        </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="inputs">
-          {formState === "Sign Up" && (
-            <>
-              <div className="input">
-                <input
-                  type="text"
-                  name="nome"
-                  placeholder="Nome"
-                  value={formData.nome}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="input">
-                <input
-                  type="tel"
-                  name="telefone"
-                  placeholder="Número de telefone"
-                  value={formData.telefone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </>
+        <form onSubmit={handleSubmit}>
+          <div className="inputs">
+            {formState === "Sign Up" && (
+              <>
+                <div className="input">
+                  <input
+                    type="text"
+                    name="nome"
+                    placeholder="Nome"
+                    value={formData.nome}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="input">
+                  <input
+                    type="tel"
+                    name="telefone"
+                    placeholder="Número de telefone"
+                    value={formData.telefone}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </>
+            )}
+            <div className="input">
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="input">
+              <input
+                type="password"
+                name="senha"
+                placeholder="Senha"
+                value={formData.senha}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          {formState === "Login" && (
+            <div className="forgot-password">
+              Esqueceu a senha? <span>Clique aqui!</span>
+            </div>
           )}
-          <div className="input">
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
+
+          {state.errors.auth && <div className="error-message">{state.errors.auth}</div>}
+
+          <div className="submit-container">
+            <button
+              type="button"
+              className={formState === "Login" ? "submit gray" : "submit"}
+              onClick={() => {
+                setFormState("Sign Up")
+                actions.clearError("auth")
+              }}
+            >
+              Cadastrar
+            </button>
+            <button
+              type="button"
+              className={formState === "Sign Up" ? "submit gray" : "submit"}
+              onClick={() => {
+                setFormState("Login")
+                actions.clearError("auth")
+              }}
+            >
+              Login
+            </button>
           </div>
-          <div className="input">
-            <input
-              type="password"
-              name="senha"
-              placeholder="Senha"
-              value={formData.senha}
-              onChange={handleChange}
-              required
-            />
+
+          <button type="submit" className="submit-button" disabled={state.loading.auth}>
+            {state.loading.auth ? (
+              <>
+                <LoadingSpinner size="small" color="white" />
+                Processando...
+              </>
+            ) : formState === "Login" ? (
+              "Entrar"
+            ) : (
+              "Cadastrar"
+            )}
+          </button>
+        </form>
+
+        <div className="social-login">
+          <div className="social-text">Ou entre com</div>
+          <div className="social-icons">
+            <div className="google-login-wrapper">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="outline"
+                size="large"
+                text="signin_with"
+                shape="rectangular"
+                logo_alignment="left"
+              />
+            </div>
+            <button
+              className="social-button facebook"
+              onClick={handleFacebookLogin}
+              disabled={state.loading.auth}
+              type="button"
+            >
+              <div className="social-icon facebook-icon"></div>
+              Facebook
+            </button>
           </div>
-        </div>
-
-        {formState === "Login" && (
-          <div className="forgot-password">
-            Esqueceu a senha? <span>Clique aqui!</span>
-          </div>
-        )}
-
-        {state.errors.auth && <div className="error-message">{state.errors.auth}</div>}
-
-        <div className="submit-container">
-          <button
-            type="button"
-            className={formState === "Login" ? "submit gray" : "submit"}
-            onClick={() => {
-              setFormState("Sign Up")
-              actions.clearError("auth")
-            }}
-          >
-            Cadastrar
-          </button>
-          <button
-            type="button"
-            className={formState === "Sign Up" ? "submit gray" : "submit"}
-            onClick={() => {
-              setFormState("Login")
-              actions.clearError("auth")
-            }}
-          >
-            Login
-          </button>
-        </div>
-
-        <button type="submit" className="submit-button" disabled={state.loading.auth}>
-          {state.loading.auth ? (
-            <>
-              <LoadingSpinner size="small" color="white" />
-              Processando...
-            </>
-          ) : formState === "Login" ? (
-            "Entrar"
-          ) : (
-            "Cadastrar"
-          )}
-        </button>
-      </form>
-
-      <div className="social-login">
-        <div className="social-text">Ou entre com</div>
-        <div className="social-icons">
-          <button
-            className="social-button google"
-            onClick={handleGoogleLogin}
-            disabled={state.loading.auth}
-            type="button"
-          >
-            <div className="social-icon google-icon"></div>
-            Google
-          </button>
-          <button
-            className="social-button facebook"
-            onClick={handleFacebookLogin}
-            disabled={state.loading.auth}
-            type="button"
-          >
-            <div className="social-icon facebook-icon"></div>
-            Facebook
-          </button>
         </div>
       </div>
-    </div>
+    </GoogleOAuthProvider>
   )
 }
 
 export default LoginRegister
-

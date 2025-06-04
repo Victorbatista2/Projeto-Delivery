@@ -255,6 +255,29 @@ const AppContext = createContext()
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState)
 
+  // Carregar endereços do usuário
+  const loadUserAddresses = useCallback(async (userId) => {
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: { key: "addresses", value: true } })
+
+      const response = await fetch(`http://localhost:3001/api/usuarios/${userId}/enderecos`)
+      if (response.ok) {
+        const addresses = await response.json()
+        dispatch({ type: ACTIONS.SET_ADDRESSES, payload: addresses })
+
+        // Selecionar endereço padrão
+        const defaultAddress = addresses.find((addr) => addr.isDefault)
+        if (defaultAddress) {
+          dispatch({ type: ACTIONS.SET_SELECTED_ADDRESS, payload: defaultAddress })
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar endereços:", error)
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: { key: "addresses", value: false } })
+    }
+  }, [])
+
   // Verificar sessão salva com timeout
   useEffect(() => {
     const checkSavedSession = async () => {
@@ -287,40 +310,27 @@ export function AppProvider({ children }) {
     checkSavedSession()
 
     return () => clearTimeout(timeoutId)
-  }, [])
-
-  // Carregar endereços do usuário
-  const loadUserAddresses = useCallback(async (userId) => {
-    try {
-      dispatch({ type: ACTIONS.SET_LOADING, payload: { key: "addresses", value: true } })
-
-      const response = await fetch(`http://localhost:3001/api/usuarios/${userId}/enderecos`)
-      if (response.ok) {
-        const addresses = await response.json()
-        dispatch({ type: ACTIONS.SET_ADDRESSES, payload: addresses })
-
-        // Selecionar endereço padrão
-        const defaultAddress = addresses.find((addr) => addr.isDefault)
-        if (defaultAddress) {
-          dispatch({ type: ACTIONS.SET_SELECTED_ADDRESS, payload: defaultAddress })
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao carregar endereços:", error)
-    } finally {
-      dispatch({ type: ACTIONS.SET_LOADING, payload: { key: "addresses", value: false } })
-    }
-  }, [])
+  }, [loadUserAddresses])
 
   // Actions
   const actions = {
     // Auth
+    setUser: (userData) => {
+      dispatch({ type: ACTIONS.SET_USER, payload: userData })
+      localStorage.setItem("userData", JSON.stringify(userData))
+
+      // Carregar endereços do usuário se houver ID
+      if (userData.id) {
+        loadUserAddresses(userData.id)
+      }
+    },
+
     login: async (credentials) => {
       try {
         dispatch({ type: ACTIONS.SET_LOADING, payload: { key: "auth", value: true } })
         dispatch({ type: ACTIONS.CLEAR_ERROR, payload: "auth" })
 
-        const response = await fetch("http://localhost:3001/api/login", {
+        const response = await fetch("http://localhost:3001/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(credentials),
@@ -333,6 +343,13 @@ export function AppProvider({ children }) {
         }
 
         const userData = data.usuario || data
+
+        // Armazenar o token JWT
+        if (data.token) {
+          localStorage.setItem("authToken", data.token)
+          userData.token = data.token
+        }
+
         dispatch({ type: ACTIONS.SET_USER, payload: userData })
         localStorage.setItem("userData", JSON.stringify(userData))
 
@@ -582,5 +599,3 @@ export function useApp() {
   }
   return context
 }
-
-

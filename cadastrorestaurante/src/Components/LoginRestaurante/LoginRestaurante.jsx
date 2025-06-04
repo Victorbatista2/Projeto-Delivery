@@ -154,4 +154,3 @@ const LoginRestaurante = () => {
 }
 
 export default LoginRestaurante
-
