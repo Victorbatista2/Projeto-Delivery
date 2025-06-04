@@ -120,19 +120,30 @@ function appReducer(state, action) {
       }
 
     case ACTIONS.ADD_TO_CART:
-      const existingItem = state.cart.items.find((item) => item.id === action.payload.id)
+      const existingItem = state.cart.items.find(
+        (item) => item.name === action.payload.name && item.restaurantId === action.payload.restaurantId,
+      )
       let newItems
 
       if (existingItem) {
         newItems = state.cart.items.map((item) =>
-          item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item,
+          item.name === action.payload.name && item.restaurantId === action.payload.restaurantId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
         )
       } else {
         newItems = [...state.cart.items, { ...action.payload, quantity: 1 }]
       }
 
       const newTotal = newItems.reduce((total, item) => {
-        const price = Number.parseFloat(item.price.replace("R$ ", "").replace(",", "."))
+        let price = 0
+        if (typeof item.price === "string") {
+          // Se o preço é string (ex: "R$ 15,90"), fazer parse
+          price = Number.parseFloat(item.price.replace("R$ ", "").replace(",", "."))
+        } else {
+          // Se o preço já é número
+          price = Number.parseFloat(item.price)
+        }
         return total + price * item.quantity
       }, 0)
 
@@ -142,14 +153,19 @@ function appReducer(state, action) {
           ...state.cart,
           items: newItems,
           total: newTotal,
-          restaurant: action.payload.restaurant || state.cart.restaurant,
+          restaurant: action.payload.restaurantName || state.cart.restaurant,
         },
       }
 
     case ACTIONS.REMOVE_FROM_CART:
       const filteredItems = state.cart.items.filter((item) => item.id !== action.payload)
       const updatedTotal = filteredItems.reduce((total, item) => {
-        const price = Number.parseFloat(item.price.replace("R$ ", "").replace(",", "."))
+        let price = 0
+        if (typeof item.price === "string") {
+          price = Number.parseFloat(item.price.replace("R$ ", "").replace(",", "."))
+        } else {
+          price = Number.parseFloat(item.price)
+        }
         return total + price * item.quantity
       }, 0)
 
@@ -169,7 +185,12 @@ function appReducer(state, action) {
         .filter((item) => item.quantity > 0)
 
       const recalculatedTotal = updatedItems.reduce((total, item) => {
-        const price = Number.parseFloat(item.price.replace("R$ ", "").replace(",", "."))
+        let price = 0
+        if (typeof item.price === "string") {
+          price = Number.parseFloat(item.price.replace("R$ ", "").replace(",", "."))
+        } else {
+          price = Number.parseFloat(item.price)
+        }
         return total + price * item.quantity
       }, 0)
 
@@ -582,6 +603,3 @@ export function useApp() {
   }
   return context
 }
-
-
-

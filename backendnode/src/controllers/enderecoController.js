@@ -5,6 +5,8 @@ const enderecoController = {
   listarEnderecos: async (req, res) => {
     try {
       const { usuarioId } = req.params
+      console.log("Listando endereços para usuário:", usuarioId)
+
       const enderecos = await enderecoModel.buscarEnderecosPorUsuario(usuarioId)
 
       // Formatar dados para o frontend
@@ -18,7 +20,7 @@ const enderecoController = {
         city: endereco.cidade,
         state: endereco.estado,
         zipCode: endereco.cep,
-        isDefault: endereco.padrao,
+        isDefault: endereco.endereco_padrao,
       }))
 
       res.json(enderecosFormatados)
@@ -55,7 +57,7 @@ const enderecoController = {
         city: endereco.cidade,
         state: endereco.estado,
         zipCode: endereco.cep,
-        isDefault: endereco.padrao,
+        isDefault: endereco.endereco_padrao,
       }
 
       res.json(enderecoFormatado)
@@ -73,20 +75,36 @@ const enderecoController = {
   criarEndereco: async (req, res) => {
     try {
       const { usuarioId } = req.params
-      const enderecoData = {
-        usuario_id: Number.parseInt(usuarioId),
-        rotulo: req.body.label,
-        cep: req.body.zipCode,
-        rua: req.body.street,
-        numero: req.body.number,
-        complemento: req.body.complement,
-        bairro: req.body.neighborhood,
-        cidade: req.body.city,
-        estado: req.body.state,
-        padrao: req.body.isDefault,
+      console.log("Criando endereço para usuário:", usuarioId)
+      console.log("Dados recebidos:", req.body)
+
+      // Validar dados obrigatórios
+      const { label, street, number, neighborhood, city, state, zipCode } = req.body
+
+      if (!label || !street || !number || !neighborhood || !city || !state || !zipCode) {
+        return res.status(400).json({
+          success: false,
+          message: "Todos os campos obrigatórios devem ser preenchidos",
+        })
       }
 
+      const enderecoData = {
+        usuario_id: Number.parseInt(usuarioId),
+        rotulo: label,
+        cep: zipCode,
+        rua: street,
+        numero: number,
+        complemento: req.body.complement || "",
+        bairro: neighborhood,
+        cidade: city,
+        estado: state,
+        endereco_padrao: req.body.isDefault || false,
+      }
+
+      console.log("Dados formatados para salvar:", enderecoData)
+
       const novoEndereco = await enderecoModel.criarEndereco(enderecoData)
+      console.log("Endereço criado:", novoEndereco)
 
       const enderecoFormatado = {
         id: novoEndereco.id,
@@ -98,7 +116,7 @@ const enderecoController = {
         city: novoEndereco.cidade,
         state: novoEndereco.estado,
         zipCode: novoEndereco.cep,
-        isDefault: novoEndereco.padrao,
+        isDefault: novoEndereco.endereco_padrao,
       }
 
       res.status(201).json(enderecoFormatado)
@@ -125,7 +143,7 @@ const enderecoController = {
         bairro: req.body.neighborhood,
         cidade: req.body.city,
         estado: req.body.state,
-        padrao: req.body.isDefault,
+        endereco_padrao: req.body.isDefault,
       }
 
       const enderecoAtualizado = await enderecoModel.atualizarEndereco(enderecoId, usuarioId, enderecoData)
@@ -147,7 +165,7 @@ const enderecoController = {
         city: enderecoAtualizado.cidade,
         state: enderecoAtualizado.estado,
         zipCode: enderecoAtualizado.cep,
-        isDefault: enderecoAtualizado.padrao,
+        isDefault: enderecoAtualizado.endereco_padrao,
       }
 
       res.json(enderecoFormatado)
@@ -204,7 +222,7 @@ const enderecoController = {
         city: enderecoPadrao.cidade,
         state: enderecoPadrao.estado,
         zipCode: enderecoPadrao.cep,
-        isDefault: enderecoPadrao.padrao,
+        isDefault: enderecoPadrao.endereco_padrao,
       }
 
       res.json(enderecoFormatado)
@@ -220,6 +238,8 @@ const enderecoController = {
 }
 
 module.exports = enderecoController
+
+
 
 
 

@@ -1,26 +1,169 @@
 "use client"
 
-import { useState } from "react"
-import { ArrowLeft, CreditCard, Info, ChevronRight } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ArrowLeft, CreditCard, Info, ChevronRight, X, Home, Briefcase, Clock } from "lucide-react"
+import { useApp } from "../../contexts/AppContext"
 import "./PaymentPage.css"
 
-const PaymentPage = ({ cartProducts, cartTotal, deliveryFee, selectedAddress, onBack }) => {
-  const [paymentTab, setPaymentTab] = useState("site") // site or delivery
+const PaymentPage = ({ cartProducts = [], cartTotal = 0, deliveryFee = 0, onBack }) => {
+  const { state, actions } = useApp()
+  const [paymentTab, setPaymentTab] = useState("site")
   const [savedCards, setSavedCards] = useState([])
   const [cpfCnpj, setCpfCnpj] = useState("")
   const [includeCpfCnpj, setIncludeCpfCnpj] = useState(false)
   const [couponCode, setCouponCode] = useState("")
+  const [showAddressModal, setShowAddressModal] = useState(false)
+  const [searchAddress, setSearchAddress] = useState("")
+
+  const [addressModalStep, setAddressModalStep] = useState(1)
+  const [addressSearchQuery, setAddressSearchQuery] = useState("")
+  const [newAddress, setNewAddress] = useState({
+    label: "",
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    isDefault: false,
+  })
+
+  // Address functionality functions
+  const handleAddressFormChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setNewAddress((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }))
+  }
+
+  const setAddressLabel = (label) => {
+    setNewAddress((prev) => ({
+      ...prev,
+      label,
+    }))
+  }
+
+  const saveNewAddress = async () => {
+    try {
+      const savedAddress = await actions.addAddress(newAddress)
+
+      setNewAddress({
+        label: "",
+        street: "",
+        number: "",
+        complement: "",
+        neighborhood: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        isDefault: false,
+      })
+
+      setShowAddressModal(false)
+      setAddressModalStep(1)
+    } catch (error) {
+      console.error("Erro ao salvar endereço:", error)
+    }
+  }
+
+  // Load addresses when component mounts
+  useEffect(() => {
+    if (state.user && state.user.id && (!state.addresses || state.addresses.length === 0)) {
+      const loadAddresses = async () => {
+        try {
+          const response = await fetch(`http://localhost:3001/api/usuarios/${state.user.id}/enderecos`)
+          if (response.ok) {
+            const addresses = await response.json()
+            console.log("Endereços carregados no mount:", addresses)
+            // Force update of addresses in the component state if context doesn't work
+            if (addresses && addresses.length > 0) {
+              // The addresses should be available in state.addresses
+            }
+          }
+        } catch (error) {
+          console.error("Erro ao carregar endereços no mount:", error)
+        }
+      }
+      loadAddresses()
+    }
+  }, [state.user])
 
   // Format price for display
   const formatPrice = (price) => {
+    if (typeof price !== "number" || isNaN(price)) return "R$ 0,00"
     return `R$ ${price.toFixed(2).replace(".", ",")}`
   }
 
-  // Format address for display
+  // Format address for display in two lines
   const formatAddressForDisplay = (address) => {
-    if (!address) return "Nenhum - Selecione um endereço"
-    return `${address.street}, ${address.number} - ${address.neighborhood}, ${address.city}/${address.state}`
+    if (!address) return { line1: "Nenhum", line2: "Selecione um endereço" }
+
+    const line1Parts = []
+    const line2Parts = []
+
+    // First line: street and number
+    if (address.rua && address.numero) {
+      line1Parts.push(`${address.rua}, ${address.numero}`)
+    } else if (address.rua) {
+      line1Parts.push(address.rua)
+    }
+
+    // Second line: neighborhood, city and state
+    if (address.bairro) {
+      line2Parts.push(address.bairro)
+    }
+
+    const cityState = []
+    if (address.cidade) cityState.push(address.cidade)
+    if (address.estado) cityState.push(address.estado)
+
+    if (cityState.length > 0) {
+      line2Parts.push(cityState.join(" - "))
+    }
+
+    return {
+      line1: line1Parts.length > 0 ? line1Parts.join("") : "Endereço incompleto",
+      line2: line2Parts.length > 0 ? line2Parts.join(", ") : "",
+    }
   }
+
+  // Load addresses when modal opens
+  const handleOpenAddressModal = () => {
+    setShowAddressModal(true)
+    setAddressModalStep(1)
+  }
+
+  // Get icon for address type
+  const getAddressIcon = (rotulo) => {
+    switch (rotulo?.toLowerCase()) {
+      case "casa":
+        return <Home size={20} className="address-icon" />
+      case "trabalho":
+        return <Briefcase size={20} className="address-icon" />
+      default:
+        return <Clock size={20} className="address-icon" />
+    }
+  }
+
+  // Filter addresses based on search
+  const filteredAddresses = (state.addresses || []).filter(
+    (address) =>
+      (address.rua || "").toLowerCase().includes(searchAddress.toLowerCase()) ||
+      (address.bairro || "").toLowerCase().includes(searchAddress.toLowerCase()) ||
+      (address.cidade || "").toLowerCase().includes(searchAddress.toLowerCase()) ||
+      (address.rotulo || "").toLowerCase().includes(searchAddress.toLowerCase()),
+  )
+
+  // Handle address selection
+  const handleAddressSelect = (address) => {
+    actions.selectAddress(address)
+    setShowAddressModal(false)
+  }
+
+  // Safe cart products with fallbacks
+  const safeCartProducts = Array.isArray(cartProducts) ? cartProducts : []
 
   return (
     <div className="payment-page">
@@ -45,7 +188,7 @@ const PaymentPage = ({ cartProducts, cartTotal, deliveryFee, selectedAddress, on
           {/* Delivery/Pickup Tabs */}
           <div className="delivery-tabs">
             <button
-              className={`delivery-tab ${!paymentTab || paymentTab === "entrega" ? "active" : ""}`}
+              className={`delivery-tab ${paymentTab === "entrega" ? "active" : ""}`}
               onClick={() => setPaymentTab("entrega")}
             >
               Entrega
@@ -66,11 +209,20 @@ const PaymentPage = ({ cartProducts, cartTotal, deliveryFee, selectedAddress, on
               </div>
             </div>
             <div className="address-details">
-              <p className="address-text">
-                {selectedAddress ? formatAddressForDisplay(selectedAddress) : "Nenhum - Selecione um endereço"}
-              </p>
+              {state.selectedAddress ? (
+                <>
+                  <p className="address-text">{formatAddressForDisplay(state.selectedAddress).line1}</p>
+                  {formatAddressForDisplay(state.selectedAddress).line2 && (
+                    <p className="address-text-secondary">{formatAddressForDisplay(state.selectedAddress).line2}</p>
+                  )}
+                </>
+              ) : (
+                <p className="address-text">Nenhum - Selecione um endereço</p>
+              )}
             </div>
-            <button className="address-change-button">Trocar</button>
+            <button className="address-change-button" onClick={handleOpenAddressModal}>
+              Trocar
+            </button>
           </div>
 
           {/* Delivery Time */}
@@ -84,7 +236,18 @@ const PaymentPage = ({ cartProducts, cartTotal, deliveryFee, selectedAddress, on
               </div>
               <div className="delivery-option-details">
                 <span>Hoje, 20-30 min</span>
-                <span className="delivery-fee-text">Grátis</span>
+                <span className="delivery-fee-text">R$ 7,90</span>
+              </div>
+            </div>
+
+            <div className="delivery-option">
+              <div className="delivery-option-header">
+                <span className="delivery-option-label">Rápida</span>
+                <Info size={16} className="info-icon" />
+              </div>
+              <div className="delivery-option-details">
+                <span>Hoje, 12-22 min</span>
+                <span className="delivery-fee-text">R$ 11,99</span>
               </div>
             </div>
           </div>
@@ -125,18 +288,6 @@ const PaymentPage = ({ cartProducts, cartTotal, deliveryFee, selectedAddress, on
                 <h3>Pague com Pix</h3>
                 <p>Use o QR Code ou copie e cole o código</p>
               </div>
-            </div>
-
-            {/* Credit Card Section */}
-            <div className="payment-section">
-              <h3>Adicione um cartão no iFood</h3>
-              <div className="card-info-container">
-                <p>É prático, seguro e você não perde nenhum minuto a mais quando seu pedido chegar.</p>
-                <div className="card-illustration">
-                  <img src="/placeholder.svg?height=100&width=150" alt="Credit card illustration" />
-                </div>
-              </div>
-              <button className="add-card-button">Adicionar novo cartão</button>
             </div>
 
             {/* Saved Cards */}
@@ -192,23 +343,27 @@ const PaymentPage = ({ cartProducts, cartTotal, deliveryFee, selectedAddress, on
           <div className="summary-header">
             <div className="summary-restaurant">
               <h3>Seu pedido em</h3>
-              <h2>{cartProducts.length > 0 ? cartProducts[0].restaurant : "Restaurante"}</h2>
+              <h2>
+                {safeCartProducts.length > 0 ? safeCartProducts[0].restaurantName || "Restaurante" : "Restaurante"}
+              </h2>
             </div>
             <button className="view-menu-button">Ver Cardápio</button>
           </div>
 
           <div className="summary-items">
-            {cartProducts.length > 0 ? (
-              cartProducts.map((product) => (
-                <div key={product.id} className="summary-item">
-                  <div className="item-quantity">{product.quantity}x</div>
+            {safeCartProducts.length > 0 ? (
+              safeCartProducts.map((product, index) => (
+                <div key={product.id || index} className="summary-item">
+                  <div className="item-quantity">{product.quantity || 1}x</div>
                   <div className="item-details">
-                    <h4>{product.name}</h4>
+                    <h4>{product.name || "Produto"}</h4>
                     {product.description && <p className="item-description">{product.description}</p>}
                   </div>
                   <div className="item-price">
                     {formatPrice(
-                      Number.parseFloat(product.price.replace("R$ ", "").replace(",", ".")) * product.quantity,
+                      (typeof product.price === "string"
+                        ? Number.parseFloat(product.price.replace("R$ ", "").replace(",", "."))
+                        : Number(product.price) || 0) * (product.quantity || 1),
                     )}
                   </div>
                 </div>
@@ -271,9 +426,386 @@ const PaymentPage = ({ cartProducts, cartTotal, deliveryFee, selectedAddress, on
           </div>
         </div>
       </div>
+
+      {/* Address Modal */}
+      {showAddressModal && (
+        <div className="modal-overlay" onClick={() => setShowAddressModal(false)}>
+          <div className="address-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                {addressModalStep === 1
+                  ? "Selecione um endereço"
+                  : addressModalStep === 2
+                    ? "Buscar endereço"
+                    : "Completar endereço"}
+              </h2>
+              <button
+                className="close-modal"
+                onClick={() => {
+                  setShowAddressModal(false)
+                  setAddressModalStep(1)
+                }}
+                aria-label="Fechar modal"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Step 1: Address List */}
+            {addressModalStep === 1 && (
+              <div className="modal-content">
+                {state.loading.addresses ? (
+                  <div style={{ padding: "40px", textAlign: "center" }}>
+                    <div className="loading-spinner"></div>
+                    <p>Carregando endereços...</p>
+                  </div>
+                ) : state.addresses.length > 0 ? (
+                  <div className="saved-addresses">
+                    {state.addresses.map((address) => (
+                      <div
+                        key={address.id}
+                        className={`saved-address-item ${
+                          state.selectedAddress && state.selectedAddress.id === address.id ? "selected" : ""
+                        }`}
+                        onClick={() => handleAddressSelect(address)}
+                      >
+                        <div className="address-icon">
+                          {address.label === "Casa" ? <Home size={20} /> : <Briefcase size={20} />}
+                        </div>
+                        <div className="address-details">
+                          <div className="address-label">{address.label}</div>
+                          <div className="address-line">
+                            {address.street}, {address.number}
+                            {address.complement && `, ${address.complement}`}
+                          </div>
+                          <div className="address-line secondary">
+                            {address.neighborhood}, {address.city} - {address.state}
+                          </div>
+                        </div>
+                        <div className="address-actions">
+                          {address.isDefault ? (
+                            <div className="default-badge">Padrão</div>
+                          ) : (
+                            <button
+                              className="set-default-button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                actions.updateAddress(address.id, { ...address, isDefault: true })
+                              }}
+                            >
+                              Definir como padrão
+                            </button>
+                          )}
+                          <button
+                            className="delete-address-button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (window.confirm("Tem certeza que deseja excluir este endereço?")) {
+                                actions.deleteAddress(address.id)
+                              }
+                            }}
+                            title="Excluir endereço"
+                            aria-label="Excluir endereço"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M3 6H5H21"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-addresses">
+                    <div className="empty-addresses-icon">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                          d="M21 10C21 17 12 23 12 23S3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.3639 3.63604C20.0518 5.32387 21 7.61305 21 10Z"
+                          stroke="#ccc"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z"
+                          stroke="#ccc"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                    <h3>Nenhum endereço cadastrado</h3>
+                    <p>Adicione um novo endereço para continuar.</p>
+                  </div>
+                )}
+
+                <button
+                  className="add-address-button"
+                  onClick={() => setAddressModalStep(2)}
+                  disabled={state.loading.addresses}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12 5V19M5 12H19"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  {state.addresses.length > 0 ? "Adicionar novo endereço" : "Adicionar endereço"}
+                </button>
+              </div>
+            )}
+
+            {/* Step 2: Address Search */}
+            {addressModalStep === 2 && (
+              <div className="modal-content">
+                <div className="address-search-container">
+                  <div className="address-search-input">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M21 10C21 17 12 23 12 23S3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.3639 3.63604C20.0518 5.32387 21 7.61305 21 10Z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Digite seu endereço"
+                      value={addressSearchQuery}
+                      onChange={(e) => setAddressSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="address-manual-entry">
+                  <button type="button" className="manual-entry-button" onClick={() => setAddressModalStep(3)}>
+                    Preencher endereço manualmente
+                  </button>
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" className="modal-back-button" onClick={() => setAddressModalStep(1)}>
+                    Voltar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Address Form */}
+            {addressModalStep === 3 && (
+              <div className="modal-content">
+                <div className="address-form">
+                  <div className="address-label-selector">
+                    <div className="label-title">Identificação</div>
+                    <div className="label-options">
+                      <button
+                        type="button"
+                        className={`label-option ${newAddress.label === "Casa" ? "selected" : ""}`}
+                        onClick={() => setAddressLabel("Casa")}
+                      >
+                        <Home size={16} />
+                        Casa
+                      </button>
+                      <button
+                        type="button"
+                        className={`label-option ${newAddress.label === "Trabalho" ? "selected" : ""}`}
+                        onClick={() => setAddressLabel("Trabalho")}
+                      >
+                        <Briefcase size={16} />
+                        Trabalho
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="street">Rua</label>
+                      <input
+                        type="text"
+                        id="street"
+                        name="street"
+                        value={newAddress.street}
+                        onChange={handleAddressFormChange}
+                        placeholder="Nome da rua"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row two-columns">
+                    <div className="form-group">
+                      <label htmlFor="number">Número</label>
+                      <input
+                        type="text"
+                        id="number"
+                        name="number"
+                        value={newAddress.number}
+                        onChange={handleAddressFormChange}
+                        placeholder="Número"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="complement">Complemento</label>
+                      <input
+                        type="text"
+                        id="complement"
+                        name="complement"
+                        value={newAddress.complement}
+                        onChange={handleAddressFormChange}
+                        placeholder="Apto, Bloco, etc."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="neighborhood">Bairro</label>
+                      <input
+                        type="text"
+                        id="neighborhood"
+                        name="neighborhood"
+                        value={newAddress.neighborhood}
+                        onChange={handleAddressFormChange}
+                        placeholder="Bairro"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row two-columns">
+                    <div className="form-group">
+                      <label htmlFor="city">Cidade</label>
+                      <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        value={newAddress.city}
+                        onChange={handleAddressFormChange}
+                        placeholder="Cidade"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="state">Estado</label>
+                      <input
+                        type="text"
+                        id="state"
+                        name="state"
+                        value={newAddress.state}
+                        onChange={handleAddressFormChange}
+                        placeholder="Estado"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="zipCode">CEP</label>
+                      <input
+                        type="text"
+                        id="zipCode"
+                        name="zipCode"
+                        value={newAddress.zipCode}
+                        onChange={handleAddressFormChange}
+                        placeholder="00000-000"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group checkbox">
+                      <input
+                        type="checkbox"
+                        id="isDefault"
+                        name="isDefault"
+                        checked={newAddress.isDefault}
+                        onChange={handleAddressFormChange}
+                      />
+                      <label htmlFor="isDefault">Definir como endereço padrão</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" className="modal-back-button" onClick={() => setAddressModalStep(2)}>
+                    Voltar
+                  </button>
+                  <button
+                    type="button"
+                    className="modal-save-button"
+                    onClick={saveNewAddress}
+                    disabled={
+                      state.loading.addresses ||
+                      !newAddress.label ||
+                      !newAddress.street ||
+                      !newAddress.number ||
+                      !newAddress.neighborhood ||
+                      !newAddress.city ||
+                      !newAddress.state
+                    }
+                  >
+                    {state.loading.addresses ? "Salvando..." : "Salvar endereço"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 export default PaymentPage
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
