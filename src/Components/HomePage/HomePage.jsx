@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useApp } from "../../contexts/AppContext"
@@ -88,15 +90,19 @@ const CategoryIcon = React.memo(({ category }) => {
 })
 
 // Memoized restaurant card component
-const RestaurantCard = React.memo(({ restaurant }) => {
+const RestaurantCard = React.memo(({ restaurant, onClick }) => {
   const formatPrice = useCallback((price) => {
     return `R$ ${price.toFixed(2).replace(".", ",")}`
   }, [])
 
   return (
-    <div className="restaurant-card">
+    <div className="restaurant-card" onClick={onClick} style={{ cursor: "pointer" }}>
       <div className="restaurant-card-image-container">
-        <LazyImage src={restaurant.image} alt={restaurant.name} className="restaurant-card-image" />
+        <LazyImage
+          src={restaurant.image || restaurant.imagem || restaurant.imagem_url}
+          alt={restaurant.name}
+          className="restaurant-card-image"
+        />
         {restaurant.featured && <div className="featured-badge">Destaque</div>}
       </div>
       <div className="restaurant-card-content">
@@ -204,6 +210,14 @@ const HomePage = ({ user, onLogout }) => {
   const handleCategoryClick = useCallback(
     (category) => {
       navigate(`/categoria/${category.toLowerCase().replace(/\s+/g, "-")}`)
+    },
+    [navigate],
+  )
+
+  // Handle restaurant click
+  const handleRestaurantClick = useCallback(
+    (restaurant) => {
+      navigate(`/restaurante/${restaurant.id}`)
     },
     [navigate],
   )
@@ -482,9 +496,17 @@ const HomePage = ({ user, onLogout }) => {
                     <h3>Restaurantes</h3>
                     <ul>
                       {searchResults.restaurants.map((restaurant) => (
-                        <li key={`restaurant-${restaurant.id}`} className="restaurant-item">
+                        <li
+                          key={`restaurant-${restaurant.id}`}
+                          className="restaurant-item"
+                          onClick={() => handleRestaurantClick(restaurant)}
+                          style={{ cursor: "pointer" }}
+                        >
                           <div className="restaurant-image">
-                            <LazyImage src={restaurant.image} alt={restaurant.name} />
+                            <LazyImage
+                              src={restaurant.image || restaurant.imagem || restaurant.imagem_url}
+                              alt={restaurant.name}
+                            />
                           </div>
                           <div className="restaurant-info">
                             <h4>{restaurant.name}</h4>
@@ -714,7 +736,11 @@ const HomePage = ({ user, onLogout }) => {
               ) : state.restaurants.length > 0 ? (
                 <div className="restaurants-grid">
                   {state.restaurants.map((restaurant) => (
-                    <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+                    <RestaurantCard
+                      key={restaurant.id}
+                      restaurant={restaurant}
+                      onClick={() => handleRestaurantClick(restaurant)}
+                    />
                   ))}
                 </div>
               ) : (
@@ -1209,4 +1235,5 @@ const HomePage = ({ user, onLogout }) => {
 }
 
 export default HomePage
+
 

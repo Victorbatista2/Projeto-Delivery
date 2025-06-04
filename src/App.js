@@ -11,6 +11,7 @@ const HomePage = React.lazy(() => import("./Components/HomePage/HomePage"))
 const CategoryPage = React.lazy(() => import("./Components/CategoryPage/CategoryPage"))
 const LoginRegister = React.lazy(() => import("./Components/LoginRegister/LoginRegister"))
 const PaymentPage = React.lazy(() => import("./Components/PaymentPage/PaymentPage"))
+const RestaurantProfile = React.lazy(() => import("./Components/RestaurantProfile/RestaurantProfile"))
 
 // Componente de loading para Suspense
 const PageLoader = () => (
@@ -49,6 +50,7 @@ function AppContent() {
               <>
                 <Route path="/" element={<HomePage user={state.user} onLogout={actions.logout} />} />
                 <Route path="/categoria/:category" element={<CategoryPage />} />
+                <Route path="/restaurante/:id" element={<RestaurantProfile />} />
                 <Route
                   path="/pagamento"
                   element={
@@ -92,6 +94,7 @@ function App() {
 }
 
 export default App
+
 
 
 

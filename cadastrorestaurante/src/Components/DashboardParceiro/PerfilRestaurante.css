@@ -217,7 +217,7 @@
 .preco-atual {
   font-size: 18px;
   font-weight: bold;
-  color: #39b54a;
+  color: #000000;
 }
 
 .preco-original {
@@ -287,6 +287,87 @@
   color: #717171;
 }
 
+/* Sidebar "Sobre" */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sidebar-sobre {
+  width: 400px;
+  max-width: 90%;
+  height: 100%;
+  background-color: #fff;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.close-btn:hover {
+  color: #ea1d2c;
+}
+
+.sidebar-content {
+  padding: 20px;
+}
+
+.sidebar-section {
+  margin-bottom: 30px;
+}
+
+.sidebar-section h3 {
+  font-size: 18px;
+  color: #333;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.sidebar-section p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
   .perfil-ifood-container {
@@ -311,6 +392,10 @@
   .busca-input {
     max-width: 100%;
   }
+
+  .sidebar-sobre {
+    width: 320px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -330,7 +415,12 @@
   .secao-titulo {
     font-size: 20px;
   }
+
+  .sidebar-sobre {
+    width: 280px;
+  }
 }
+
 
 
 

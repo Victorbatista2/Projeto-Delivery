@@ -63,7 +63,7 @@ const restauranteController = {
         distance: "2.5 km",
         deliveryTime: "30-45 min",
         deliveryFee: "Grátis",
-        image: "/placeholder.svg?height=150&width=250",
+        image: restaurante.imagem || "/placeholder.svg?height=150&width=250",
         featured: false,
         coupon: null,
       }))
@@ -96,7 +96,7 @@ const restauranteController = {
         distance: "2.5 km",
         deliveryTime: "30-45 min",
         deliveryFee: "Grátis",
-        image: "/placeholder.svg?height=150&width=250",
+        image: restaurante.imagem || "/placeholder.svg?height=150&width=250",
         featured: false,
         coupon: null,
       }))
@@ -177,4 +177,5 @@ const restauranteController = {
 }
 
 module.exports = restauranteController
+
 
