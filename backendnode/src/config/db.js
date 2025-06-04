@@ -3,7 +3,7 @@ const { Pool } = require("pg")
 
 // Configuração mais conservadora do pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres:1234@localhost:5432/Projeto_Ifood",
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres:426715@localhost:5432/postgres",
   max: 10, // Reduzir para evitar sobrecarga
   min: 2, // Manter algumas conexões sempre ativas
   idleTimeoutMillis: 10000, // Reduzir tempo idle

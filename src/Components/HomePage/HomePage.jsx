@@ -1209,3 +1209,4 @@ const HomePage = ({ user, onLogout }) => {
 }
 
 export default HomePage
+

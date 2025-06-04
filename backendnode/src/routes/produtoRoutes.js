@@ -42,3 +42,5 @@ console.log("DELETE /api/produtos/:id")
 console.log("PATCH /api/produtos/:id/disponibilidade")
 
 module.exports = router
+
+

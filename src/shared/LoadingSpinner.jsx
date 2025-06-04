@@ -21,3 +21,4 @@ const LoadingSpinner = ({ size = "medium", color = "#ea1d2c" }) => {
 
 export default LoadingSpinner
 
+

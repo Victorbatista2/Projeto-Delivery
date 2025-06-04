@@ -114,7 +114,6 @@ const GerenciarCardapio = ({ restauranteId, produtos, onProdutoAtualizado }) => 
       descricao: produto.descricao,
       preco: produto.preco.toString(),
       categoria: produto.categoria_nome || "",
-      ingredientes: produto.ingredientes || "",
       imagem: produto.imagem || "",
       imagemFile: null,
       ativo: produto.ativo,
@@ -172,7 +171,6 @@ const GerenciarCardapio = ({ restauranteId, produtos, onProdutoAtualizado }) => 
           descricao: editandoProduto.descricao,
           preco: Number.parseFloat(editandoProduto.preco),
           categoriaProduto: editandoProduto.categoria,
-          ingredientes: editandoProduto.ingredientes,
           imagemUrl: editandoProduto.imagemFile || editandoProduto.imagem,
           disponivel: editandoProduto.ativo,
           restauranteId: restauranteId,
@@ -346,18 +344,6 @@ const GerenciarCardapio = ({ restauranteId, produtos, onProdutoAtualizado }) => 
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="ingredientes">Ingredientes</label>
-                  <textarea
-                    id="ingredientes"
-                    name="ingredientes"
-                    value={editandoProduto.ingredientes}
-                    onChange={handleEdicaoChange}
-                    placeholder="Liste os ingredientes principais..."
-                    rows={2}
-                  />
-                </div>
-
-                <div className="form-group">
                   <label htmlFor="imagemFile">Nova Imagem do Produto</label>
                   <input type="file" id="imagemFile" name="imagemFile" onChange={handleImagemChange} accept="image/*" />
                   {(editandoProduto.imagemFile || editandoProduto.imagem) && (
@@ -422,11 +408,6 @@ const GerenciarCardapio = ({ restauranteId, produtos, onProdutoAtualizado }) => 
                 <p>
                   <strong>Status:</strong> {produtoDetalhes.ativo ? "Disponível" : "Indisponível"}
                 </p>
-                {produtoDetalhes.ingredientes && (
-                  <p>
-                    <strong>Ingredientes:</strong> {produtoDetalhes.ingredientes}
-                  </p>
-                )}
                 {produtoDetalhes.categoria_nome && (
                   <p>
                     <strong>Categoria:</strong> {produtoDetalhes.categoria_nome}
@@ -442,6 +423,13 @@ const GerenciarCardapio = ({ restauranteId, produtos, onProdutoAtualizado }) => 
 }
 
 export default GerenciarCardapio
+
+
+
+
+
+
+
 
 
 

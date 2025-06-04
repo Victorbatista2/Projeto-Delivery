@@ -9,7 +9,6 @@ const CadastroProduto = ({ restauranteId, onProdutoAdicionado }) => {
     preco: "",
     categoriaProduto: "",
     tempoPreparo: "",
-    ingredientes: "",
     imagemFile: null,
     disponivel: true,
   })
@@ -143,7 +142,6 @@ const CadastroProduto = ({ restauranteId, onProdutoAdicionado }) => {
         preco: "",
         categoriaProduto: "",
         tempoPreparo: "",
-        ingredientes: "",
         imagemFile: null,
         disponivel: true,
       })
@@ -249,18 +247,6 @@ const CadastroProduto = ({ restauranteId, onProdutoAdicionado }) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="ingredientes">Ingredientes</label>
-          <textarea
-            id="ingredientes"
-            name="ingredientes"
-            value={formData.ingredientes}
-            onChange={handleChange}
-            placeholder="Liste os ingredientes principais..."
-            rows={2}
-          />
-        </div>
-
-        <div className="form-group">
           <label htmlFor="imagemFile">Imagem do Produto</label>
           <input type="file" id="imagemFile" name="imagemFile" onChange={handleFileChange} accept="image/*" />
           {formData.imagemFile && (
@@ -299,3 +285,5 @@ const CadastroProduto = ({ restauranteId, onProdutoAdicionado }) => {
 }
 
 export default CadastroProduto
+
+

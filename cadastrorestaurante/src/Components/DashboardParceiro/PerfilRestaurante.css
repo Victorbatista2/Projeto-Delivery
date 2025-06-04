@@ -1,0 +1,344 @@
+.perfil-ifood-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Header do Restaurante */
+.restaurante-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.restaurante-info-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.restaurante-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #000;
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.restaurante-detalhes-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nome-restaurante {
+  font-size: 32px;
+  font-weight: bold;
+  color: #2e2e2e;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.verificado-icon {
+  color: #ea1d2c;
+  font-size: 20px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.estrelas {
+  color: #ffb100;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.ver-mais-btn {
+  background: none;
+  border: none;
+  color: #ea1d2c;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.ver-mais-btn:hover {
+  text-decoration: underline;
+}
+
+/* Barra de Busca */
+.busca-container {
+  margin-bottom: 32px;
+}
+
+.busca-input {
+  position: relative;
+  max-width: 400px;
+}
+
+.busca-input input {
+  width: 100%;
+  padding: 12px 16px 12px 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.busca-input input:focus {
+  border-color: #ea1d2c;
+}
+
+.busca-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 16px;
+}
+
+/* Seção de Produtos */
+.produtos-secao {
+  margin-top: 32px;
+}
+
+.secao-titulo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2e2e2e;
+  margin: 0 0 24px 0;
+  text-align: center;
+}
+
+.produtos-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  align-items: center;
+}
+
+.produto-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+  cursor: pointer;
+  border: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 200px;
+  max-width: 90%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.produto-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.produto-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-right: 20px;
+  position: relative;
+}
+
+.produto-nome {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2e2e2e;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.produto-ingredientes {
+  font-size: 14px;
+  color: #717171;
+  margin: 8px 0 16px 0;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.produto-preco-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+}
+
+.preco-atual {
+  font-size: 18px;
+  font-weight: bold;
+  color: #39b54a;
+}
+
+.preco-original {
+  font-size: 14px;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.produto-imagem-wrapper {
+  width: 150px;
+  height: 125px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.produto-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.produto-img-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #ccc;
+}
+
+/* Status do produto (Fechado) */
+.produto-status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+/* Estados de carregamento e vazio */
+.loading-produtos,
+.sem-produtos {
+  text-align: center;
+  padding: 48px 16px;
+  color: #717171;
+  font-size: 16px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 16px;
+  color: #717171;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .perfil-ifood-container {
+    padding: 16px;
+  }
+
+  .restaurante-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .nome-restaurante {
+    font-size: 24px;
+  }
+
+  .produtos-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .busca-input {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .restaurante-info-header {
+    gap: 12px;
+  }
+
+  .restaurante-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .nome-restaurante {
+    font-size: 20px;
+  }
+
+  .secao-titulo {
+    font-size: 20px;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
