@@ -130,7 +130,7 @@ exports.verifyToken = async (req, res) => {
       return res.status(401).json({ message: "Token não fornecido" })
     }
 
-<<<<<<< HEAD
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "seu_jwt_secret_muito_seguro")
     const user = await usuarioModel.selectUser(decoded.id)
 
@@ -153,6 +153,3 @@ exports.verifyToken = async (req, res) => {
     res.status(401).json({ message: "Token inválido" })
   }
 }
-=======
-
->>>>>>> fe44377103c1601160e79261240ff6d40949a8e6

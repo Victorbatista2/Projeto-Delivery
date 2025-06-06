@@ -11,10 +11,4 @@ router.post("/login", authController.loginLocal)
 router.get("/verify", authController.verifyToken)
 
 module.exports = router
-<<<<<<< HEAD
-=======
 
-
-
-
->>>>>>> fe44377103c1601160e79261240ff6d40949a8e6
