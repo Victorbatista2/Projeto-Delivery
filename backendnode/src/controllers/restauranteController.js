@@ -176,6 +176,4 @@ const restauranteController = {
   },
 }
 
-module.exports = restauranteController
-
-
+module.exports = restauranteController 

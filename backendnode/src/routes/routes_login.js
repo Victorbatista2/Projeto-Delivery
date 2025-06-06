@@ -3,6 +3,7 @@ const express = require("express")
 const router = express.Router()
 const db = require("../models/usuarioModel.js")
 
+
 // Test endpoint
 router.get("/teste", (req, res) => {
   res.json({ message: "Funcionando" })
@@ -98,6 +99,7 @@ router.post("/login", async (req, res) => {
 })
 
 module.exports = router
+
 
 
 

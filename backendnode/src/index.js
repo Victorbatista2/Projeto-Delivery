@@ -1,7 +1,18 @@
 require("dotenv").config()
 const express = require("express")
 const cors = require("cors")
+
 const { closePool } = require("./config/db")
+
+const authRoutes = require("./routes/authRoutes")
+const loginRoutes = require("./routes/routes_login")
+const restauranteRoutes = require("./routes/restauranteRoutes")
+const produtoRoutes = require("./routes/produtoRoutes")
+const pagamentoRoutes = require("./routes/pagamentoRoutes")
+const enderecoRoutes = require("./routes/enderecoRoutes")
+const metodoPagamentoRoutes = require("./routes/metodoPagamentoRoutes")
+const pedidoRoutes = require("./routes/pedidoRoutes")
+
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -35,6 +46,17 @@ app.use("/api/pagamentos", pagamentoRoutes)
 app.use("/api/usuarios", enderecoRoutes) // Mudança aqui: agora as rotas de endereço começam com /api/usuarios
 app.use("/api", loginRoutes)
 
+// Rotas
+app.use("/api", authRoutes)
+app.use("/api", loginRoutes)
+app.use("/api/restaurantes", restauranteRoutes)
+app.use("/api/produtos", produtoRoutes)
+app.use("/api/pagamento", pagamentoRoutes)
+app.use("/api/usuarios", enderecoRoutes)
+app.use("/api/metodos-pagamento", metodoPagamentoRoutes)
+app.use("/api/pedidos", pedidoRoutes)
+
+
 // Rota de teste
 app.get("/", (req, res) => {
   res.json({ message: "API do iFood Clone funcionando!" })
@@ -49,6 +71,7 @@ app.use("*", (req, res) => {
   })
 })
 
+
 // Middleware de erro global
 app.use((err, req, res, next) => {
   console.error("Erro:", err)
@@ -57,6 +80,27 @@ app.use((err, req, res, next) => {
     message: "Erro interno do servidor",
     error: err.message,
   })
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`)
+  console.log("Rotas disponíveis:")
+  console.log("- POST /api/login")
+  console.log("- POST /api/register")
+  console.log("- GET /api/restaurantes")
+  console.log("- GET /api/produtos")
+  console.log("- POST /api/pagamento")
+  console.log("- GET /api/usuarios/:usuarioId/enderecos")
+  console.log("- POST /api/usuarios/:usuarioId/enderecos")
+  console.log("- PUT /api/usuarios/:usuarioId/enderecos/:enderecoId")
+  console.log("- DELETE /api/usuarios/:usuarioId/enderecos/:enderecoId")
+  console.log("- PATCH /api/usuarios/:usuarioId/enderecos/:enderecoId/padrao")
+  console.log("- POST /api/metodos-pagamento")
+  console.log("- GET /api/metodos-pagamento/usuario/:usuarioId")
+  console.log("- PUT /api/metodos-pagamento/:id")
+  console.log("- DELETE /api/metodos-pagamento/:id")
+  console.log("- GET /api/pedidos/restaurante/:restauranteId")
+  console.log("- PUT /api/pedidos/:pedidoId/aceitar")
+  console.log("- PUT /api/pedidos/:pedidoId/recusar")
 })
 
 const server = app.listen(PORT, () => {
@@ -69,6 +113,7 @@ const server = app.listen(PORT, () => {
   console.log("- /api/usuarios/:usuarioId/enderecos (GET, POST)")
   console.log("- /api/usuarios/:usuarioId/enderecos/:enderecoId (GET, PUT, DELETE)")
 })
+
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
@@ -90,3 +135,4 @@ process.on("SIGINT", async () => {
 })
 
 module.exports = app
+

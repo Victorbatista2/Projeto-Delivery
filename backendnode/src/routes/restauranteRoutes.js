@@ -38,6 +38,3 @@ console.log("PUT /api/restaurantes/:id")
 console.log("DELETE /api/restaurantes/:id")
 
 module.exports = router
-
-
-

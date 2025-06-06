@@ -12,6 +12,7 @@ const CategoryPage = React.lazy(() => import("./Components/CategoryPage/Category
 const LoginRegister = React.lazy(() => import("./Components/LoginRegister/LoginRegister"))
 const PaymentPage = React.lazy(() => import("./Components/PaymentPage/PaymentPage"))
 const RestaurantProfile = React.lazy(() => import("./Components/RestaurantProfile/RestaurantProfile"))
+const OrderTracking = React.lazy(() => import("./Components/OrderTracking/OrderTracking"))
 
 // Componente de loading para Suspense
 const PageLoader = () => (
@@ -63,6 +64,7 @@ function AppContent() {
                     />
                   }
                 />
+                <Route path="/pedido/:pedidoId" element={<OrderTracking />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </>
             ) : (
@@ -94,6 +96,7 @@ function App() {
 }
 
 export default App
+
 
 
 

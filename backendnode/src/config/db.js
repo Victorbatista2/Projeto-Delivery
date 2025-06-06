@@ -99,3 +99,5 @@ process.on("SIGTERM", async () => {
 })
 
 module.exports = { pool, query, transaction, getPoolStatus, closePool }
+
+

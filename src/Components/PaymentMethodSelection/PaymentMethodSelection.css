@@ -1,0 +1,94 @@
+/* Página ocupa toda a largura da tela */
+.payment-method-selection {
+  width: 100vw;
+  height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 60px;
+  box-sizing: border-box;
+}
+
+/* Box branco centralizado */
+.payment-method-content {
+  width: 100%;
+  max-width: 600px;
+  background-color: transparent;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+/* Título centralizado */
+.payment-method-title {
+  text-align: center;
+  font-size: 20px;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 32px;
+}
+
+/* Lista de opções */
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Cartão de pagamento */
+.payment-option {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.payment-option:hover {
+  background-color: #fff5f5;
+  border-color: #ea1d2c;
+}
+
+/* Ícone com círculo */
+.payment-option-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #f5f5f5;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 16px;
+}
+
+/* Texto da opção */
+.payment-option-text {
+  font-size: 16px;
+  color: #333;
+  font-weight: 400;
+}
+
+/* Responsivo */
+@media (max-width: 480px) {
+  .payment-method-content {
+    padding: 0 16px;
+  }
+
+  .payment-option {
+    padding: 14px;
+  }
+
+  .payment-option-text {
+    font-size: 14px;
+  }
+}
+
+
+
+
+
+
+

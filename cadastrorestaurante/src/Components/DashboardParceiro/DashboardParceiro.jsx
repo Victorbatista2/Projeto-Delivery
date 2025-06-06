@@ -7,6 +7,7 @@ import GerenciarCardapio from "./GerenciarCardapio"
 import EditarInformacoes from "./EditarInformacoes"
 import PerfilRestaurante from "./PerfilRestaurante"
 import "./DashboardParceiro.css"
+import GerenciarPedidos from "./GerenciarPedidos"
 
 const DashboardParceiro = () => {
   const navigate = useNavigate()
@@ -152,6 +153,9 @@ const DashboardParceiro = () => {
           />
         )
 
+      case "pedidos":
+        return <GerenciarPedidos restauranteId={restauranteData.id} />
+
       case "perfil":
         return <PerfilRestaurante restauranteData={restauranteData} produtos={produtos} loading={loading} />
 
@@ -219,6 +223,15 @@ const DashboardParceiro = () => {
             </li>
             <li>
               <button
+                className={`nav-item ${activeTab === "pedidos" ? "active" : ""}`}
+                onClick={() => handleTabChange("pedidos")}
+              >
+                <span className="nav-icon">📋</span>
+                Pedidos
+              </button>
+            </li>
+            <li>
+              <button
                 className={`nav-item ${activeTab === "perfil" ? "active" : ""}`}
                 onClick={() => handleTabChange("perfil")}
               >
@@ -245,5 +258,6 @@ const DashboardParceiro = () => {
 }
 
 export default DashboardParceiro
+
 
 

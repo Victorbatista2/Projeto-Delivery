@@ -8,6 +8,8 @@ const initialState = {
   isAuthenticated: false,
   addresses: [],
   selectedAddress: null,
+  paymentMethods: [],
+  selectedPaymentMethod: null,
   cart: {
     items: [],
     total: 0,
@@ -21,6 +23,7 @@ const initialState = {
     restaurants: false,
     addresses: false,
     cart: false,
+    paymentMethods: false,
   },
   errors: {},
 }
@@ -34,6 +37,11 @@ const ACTIONS = {
   UPDATE_ADDRESS: "UPDATE_ADDRESS",
   DELETE_ADDRESS: "DELETE_ADDRESS",
   SET_SELECTED_ADDRESS: "SET_SELECTED_ADDRESS",
+  SET_PAYMENT_METHODS: "SET_PAYMENT_METHODS",
+  ADD_PAYMENT_METHOD: "ADD_PAYMENT_METHOD",
+  UPDATE_PAYMENT_METHOD: "UPDATE_PAYMENT_METHOD",
+  DELETE_PAYMENT_METHOD: "DELETE_PAYMENT_METHOD",
+  SET_SELECTED_PAYMENT_METHOD: "SET_SELECTED_PAYMENT_METHOD",
   SET_CART: "SET_CART",
   ADD_TO_CART: "ADD_TO_CART",
   REMOVE_FROM_CART: "REMOVE_FROM_CART",
@@ -111,6 +119,41 @@ function appReducer(state, action) {
       return {
         ...state,
         selectedAddress: action.payload,
+      }
+
+    case ACTIONS.SET_PAYMENT_METHODS:
+      return {
+        ...state,
+        paymentMethods: action.payload,
+      }
+
+    case ACTIONS.ADD_PAYMENT_METHOD:
+      // Ensure paymentMethods is always an array
+      const currentMethods = Array.isArray(state.paymentMethods) ? state.paymentMethods : []
+      return {
+        ...state,
+        paymentMethods: [...currentMethods, action.payload],
+      }
+
+    case ACTIONS.UPDATE_PAYMENT_METHOD:
+      return {
+        ...state,
+        paymentMethods: state.paymentMethods.map((method) =>
+          method.id === action.payload.id ? action.payload : method,
+        ),
+      }
+
+    case ACTIONS.DELETE_PAYMENT_METHOD:
+      return {
+        ...state,
+        paymentMethods: state.paymentMethods.filter((method) => method.id !== action.payload),
+        selectedPaymentMethod: state.selectedPaymentMethod?.id === action.payload ? null : state.selectedPaymentMethod,
+      }
+
+    case ACTIONS.SET_SELECTED_PAYMENT_METHOD:
+      return {
+        ...state,
+        selectedPaymentMethod: action.payload,
       }
 
     case ACTIONS.SET_CART:
@@ -311,6 +354,7 @@ export function AppProvider({ children }) {
           // Carregar endereços do usuário se houver ID
           if (userData.id) {
             loadUserAddresses(userData.id)
+            loadUserPaymentMethods(userData.id)
           }
         } else {
           // Não há sessão salva
@@ -332,6 +376,49 @@ export function AppProvider({ children }) {
 
     return () => clearTimeout(timeoutId)
   }, [loadUserAddresses])
+
+  // Carregar métodos de pagamento do usuário
+  const loadUserPaymentMethods = useCallback(async (userId) => {
+    try {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: { key: "paymentMethods", value: true } })
+
+      const response = await fetch(`http://localhost:3001/api/metodos-pagamento/usuario/${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        console.log("Payment methods response:", data) // Debug log
+
+        // Ensure we always have an array - handle different response formats
+        let paymentMethods = []
+
+        if (Array.isArray(data)) {
+          paymentMethods = data
+        } else if (data && Array.isArray(data.metodos_pagamento)) {
+          paymentMethods = data.metodos_pagamento
+        } else if (data && data.data && Array.isArray(data.data)) {
+          paymentMethods = data.data
+        }
+
+        dispatch({ type: ACTIONS.SET_PAYMENT_METHODS, payload: paymentMethods })
+
+        // Selecionar método padrão
+        if (paymentMethods.length > 0) {
+          const defaultMethod = paymentMethods.find((method) => method.metodo_padrao)
+          if (defaultMethod) {
+            dispatch({ type: ACTIONS.SET_SELECTED_PAYMENT_METHOD, payload: defaultMethod })
+          }
+        }
+      } else {
+        console.log("Failed to load payment methods, setting empty array")
+        dispatch({ type: ACTIONS.SET_PAYMENT_METHODS, payload: [] })
+      }
+    } catch (error) {
+      console.error("Erro ao carregar métodos de pagamento:", error)
+      // Ensure we set empty array on error
+      dispatch({ type: ACTIONS.SET_PAYMENT_METHODS, payload: [] })
+    } finally {
+      dispatch({ type: ACTIONS.SET_LOADING, payload: { key: "paymentMethods", value: false } })
+    }
+  }, [])
 
   // Actions
   const actions = {
@@ -374,9 +461,10 @@ export function AppProvider({ children }) {
         dispatch({ type: ACTIONS.SET_USER, payload: userData })
         localStorage.setItem("userData", JSON.stringify(userData))
 
-        // Carregar endereços do usuário se houver ID
+        // Carregar endereços e métodos de pagamento do usuário se houver ID
         if (userData.id) {
           loadUserAddresses(userData.id)
+          loadUserPaymentMethods(userData.id)
         }
 
         dispatch({
@@ -433,6 +521,8 @@ export function AppProvider({ children }) {
       dispatch({ type: ACTIONS.SET_USER, payload: null })
       dispatch({ type: ACTIONS.SET_ADDRESSES, payload: [] })
       dispatch({ type: ACTIONS.SET_SELECTED_ADDRESS, payload: null })
+      dispatch({ type: ACTIONS.SET_PAYMENT_METHODS, payload: [] })
+      dispatch({ type: ACTIONS.SET_SELECTED_PAYMENT_METHOD, payload: null })
       dispatch({ type: ACTIONS.CLEAR_CART })
       localStorage.removeItem("userData")
 
@@ -543,6 +633,113 @@ export function AppProvider({ children }) {
       dispatch({ type: ACTIONS.SET_SELECTED_ADDRESS, payload: address })
     },
 
+    // Payment Methods
+    addPaymentMethod: async (paymentMethodData) => {
+      try {
+        const response = await fetch("http://localhost:3001/api/metodos-pagamento", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(paymentMethodData),
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          console.log("Add payment method response:", result) // Debug log
+
+          const newPaymentMethod = result.metodo_pagamento || result
+
+          // Ensure paymentMethods is an array before adding
+          const currentPaymentMethods = Array.isArray(state.paymentMethods) ? state.paymentMethods : []
+
+          // Add to existing payment methods
+          dispatch({ type: ACTIONS.ADD_PAYMENT_METHOD, payload: newPaymentMethod })
+
+          // Reload payment methods to ensure we have the latest data
+          if (state.user && state.user.id) {
+            await loadUserPaymentMethods(state.user.id)
+          }
+
+          dispatch({
+            type: ACTIONS.ADD_NOTIFICATION,
+            payload: {
+              type: "success",
+              message: "Cartão adicionado com sucesso!",
+            },
+          })
+
+          return newPaymentMethod
+        } else {
+          const errorData = await response.json()
+          throw new Error(errorData.message || "Erro ao adicionar cartão")
+        }
+      } catch (error) {
+        console.error("Erro ao salvar cartão:", error)
+        dispatch({ type: ACTIONS.SET_ERROR, payload: { key: "paymentMethods", value: error.message } })
+        throw error
+      }
+    },
+
+    updatePaymentMethod: async (methodId, methodData) => {
+      try {
+        const response = await fetch(`http://localhost:3001/api/metodos-pagamento/${methodId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(methodData),
+        })
+
+        if (!response.ok) {
+          throw new Error("Erro ao atualizar método de pagamento")
+        }
+
+        const updatedMethod = await response.json()
+        dispatch({ type: ACTIONS.UPDATE_PAYMENT_METHOD, payload: updatedMethod })
+
+        dispatch({
+          type: ACTIONS.ADD_NOTIFICATION,
+          payload: {
+            type: "success",
+            message: "Método de pagamento atualizado com sucesso!",
+          },
+        })
+
+        return updatedMethod
+      } catch (error) {
+        dispatch({ type: ACTIONS.SET_ERROR, payload: { key: "paymentMethods", value: error.message } })
+        throw error
+      }
+    },
+
+    deletePaymentMethod: async (methodId) => {
+      try {
+        const response = await fetch(`http://localhost:3001/api/metodos-pagamento/${methodId}`, {
+          method: "DELETE",
+        })
+
+        if (!response.ok) {
+          throw new Error("Erro ao excluir método de pagamento")
+        }
+
+        dispatch({ type: ACTIONS.DELETE_PAYMENT_METHOD, payload: methodId })
+
+        dispatch({
+          type: ACTIONS.ADD_NOTIFICATION,
+          payload: {
+            type: "success",
+            message: "Método de pagamento excluído com sucesso!",
+          },
+        })
+      } catch (error) {
+        dispatch({ type: ACTIONS.SET_ERROR, payload: { key: "paymentMethods", value: error.message } })
+        throw error
+      }
+    },
+
+    selectPaymentMethod: (method) => {
+      dispatch({ type: ACTIONS.SET_SELECTED_PAYMENT_METHOD, payload: method })
+    },
+
     // Cart
     addToCart: (product) => {
       dispatch({ type: ACTIONS.ADD_TO_CART, payload: product })
@@ -620,3 +817,17 @@ export function useApp() {
   }
   return context
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
