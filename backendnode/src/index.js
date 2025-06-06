@@ -1,10 +1,13 @@
 const express = require("express")
 const cors = require("cors")
 const authRoutes = require("./routes/authRoutes")
+const loginRoutes = require("./routes/routes_login")
 const restauranteRoutes = require("./routes/restauranteRoutes")
 const produtoRoutes = require("./routes/produtoRoutes")
 const pagamentoRoutes = require("./routes/pagamentoRoutes")
 const enderecoRoutes = require("./routes/enderecoRoutes")
+const metodoPagamentoRoutes = require("./routes/metodoPagamentoRoutes")
+const pedidoRoutes = require("./routes/pedidoRoutes")
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -23,10 +26,13 @@ app.use((req, res, next) => {
 
 // Rotas
 app.use("/api", authRoutes)
+app.use("/api", loginRoutes)
 app.use("/api/restaurantes", restauranteRoutes)
 app.use("/api/produtos", produtoRoutes)
 app.use("/api/pagamento", pagamentoRoutes)
 app.use("/api/usuarios", enderecoRoutes)
+app.use("/api/metodos-pagamento", metodoPagamentoRoutes)
+app.use("/api/pedidos", pedidoRoutes)
 
 // Rota de teste
 app.get("/", (req, res) => {
@@ -65,6 +71,18 @@ app.listen(PORT, () => {
   console.log("- PUT /api/usuarios/:usuarioId/enderecos/:enderecoId")
   console.log("- DELETE /api/usuarios/:usuarioId/enderecos/:enderecoId")
   console.log("- PATCH /api/usuarios/:usuarioId/enderecos/:enderecoId/padrao")
+  console.log("- POST /api/metodos-pagamento")
+  console.log("- GET /api/metodos-pagamento/usuario/:usuarioId")
+  console.log("- PUT /api/metodos-pagamento/:id")
+  console.log("- DELETE /api/metodos-pagamento/:id")
+  console.log("- GET /api/pedidos/restaurante/:restauranteId")
+  console.log("- PUT /api/pedidos/:pedidoId/aceitar")
+  console.log("- PUT /api/pedidos/:pedidoId/recusar")
 })
+
+
+
+
+
 
 

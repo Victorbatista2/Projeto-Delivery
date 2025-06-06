@@ -1,38 +1,41 @@
-const { connect } = require("../config/db.js")
+const { query } = require("../config/db.js")
 const bcrypt = require("bcrypt")
 
 async function selectUsers() {
-  const client = await connect()
+ 
   try {
-    const res = await client.query("SELECT * FROM Usuario")
+    const res = await query("SELECT * FROM Usuario")
     return res.rows
-  } finally {
-    client.end()
+  } catch (err) {
+    console.error("Erro ao buscar usuários:", err)
+    throw err
   }
 }
 
 async function selectUser(id) {
-  const client = await connect()
+ 
   try {
-    const res = await client.query("SELECT * FROM Usuario WHERE id=$1", [id])
+    const res = await query("SELECT * FROM Usuario WHERE id=$1", [id])
     return res.rows[0]
-  } finally {
-    client.end()
+  } catch (err) {
+    console.error("Erro ao buscar usuário:", err)
+    throw err
   }
 }
 
 async function findByEmail(email) {
-  const client = await connect()
+  
   try {
-    const res = await client.query("SELECT * FROM Usuario WHERE email=$1", [email])
+    const res = await query("SELECT * FROM Usuario WHERE email=$1", [email])
     return res.rows[0]
-  } finally {
-    client.end()
+  } catch (err) {
+    console.error("Erro ao buscar usuário por email:", err)
+    throw err
   }
 }
 
 async function insertUsuarios(Usuario) {
-  const client = await connect()
+ 
   try {
     // Hash da senha se for cadastro local
     let senhaHash = Usuario.senha
@@ -48,7 +51,7 @@ async function insertUsuarios(Usuario) {
         RETURNING *
       `
       const values = [Usuario.nome, Usuario.telefone, Usuario.email, senhaHash, Usuario.ativo]
-      const result = await client.query(sql, values)
+      const result = await query(sql, values)
       return result.rows[0]
     } else {
       // Para cadastro via OAuth (Google/Facebook)
@@ -68,61 +71,66 @@ async function insertUsuarios(Usuario) {
         Usuario.profilePicture || null,
         Usuario.authProvider,
       ]
-      const result = await client.query(sql, values)
+      const result = await query(sql, values)
       return result.rows[0]
     }
-  } finally {
-    client.end()
+  } catch (err) {
+    console.error("Erro ao inserir usuário:", err)
+    throw err
   }
 }
 
 async function updateUsuarios(id, Usuario) {
-  const client = await connect()
+  
   try {
     const sql = "UPDATE Usuario SET Nome=$1, Telefone=$2, Email=$3, Senha=$4, ativo=$5 WHERE id=$6"
     const values = [Usuario.nome, Usuario.telefone, Usuario.email, Usuario.senha, Usuario.ativo, id]
-    await client.query(sql, values)
-  } finally {
-    client.end()
+    await query(sql, values)
+  } catch (err) {
+    console.error("Erro ao atualizar usuário:", err)
+    throw err
   }
 }
 
 async function updateGoogleId(id, googleId) {
-  const client = await connect()
+  
   try {
     const sql = "UPDATE Usuario SET googleId=$1 WHERE id=$2"
-    await client.query(sql, [googleId, id])
-  } finally {
-    client.end()
+    await query(sql, [googleId, id])
+  } catch (err) {
+    console.error("Erro ao atualizar Google ID:", err)
+    throw err
   }
 }
 
 async function updateFacebookId(id, facebookId) {
-  const client = await connect()
+ 
   try {
     const sql = "UPDATE Usuario SET facebookId=$1 WHERE id=$2"
-    await client.query(sql, [facebookId, id])
-  } finally {
-    client.end()
+    await query(sql, [facebookId, id])
+  } catch (err) {
+    console.error("Erro ao atualizar Facebook ID:", err)
+    throw err
   }
 }
 
 async function deleteUsuario(id) {
-  const client = await connect()
+ 
   try {
     const sql = "DELETE FROM Usuario WHERE id=$1"
-    await client.query(sql, [id])
-  } finally {
-    client.end()
+    await query(sql, [id])
+  } catch (err) {
+    console.error("Erro ao deletar usuário:", err)
+    throw err
   }
 }
 
 // Função para autenticar usuário
 async function autenticarUsuario(email, senha) {
-  const client = await connect()
+  
   try {
     const sql = "SELECT * FROM Usuario WHERE email = $1 AND ativo = true"
-    const result = await client.query(sql, [email])
+    const result = await query(sql, [email])
 
     const usuario = result.rows[0]
     if (!usuario) {
@@ -138,8 +146,9 @@ async function autenticarUsuario(email, senha) {
     // Remover senha do retorno
     delete usuario.senha
     return usuario
-  } finally {
-    client.end()
+  } catch (err) {
+    console.error("Erro ao autenticar usuário:", err)
+    throw err
   }
 }
 

@@ -163,8 +163,3 @@ module.exports = {
   excluirEndereco,
   definirEnderecoPadrao,
 }
-
-
-
-
-

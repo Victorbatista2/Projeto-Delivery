@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, X, Clock, Minus, Plus, ChevronRight } from "lucide-react"
+import { ArrowLeft, X, Clock, Minus, Plus, ArrowRight } from "lucide-react"
 import { useApp } from "../../contexts/AppContext"
 import "./RestaurantProfile.css"
 
@@ -332,119 +332,162 @@ const RestaurantProfile = () => {
 
       {/* Cart Sidebar */}
       {showCartSidebar && (
-        <>
-          <div className="cart-sidebar-overlay" onClick={() => setShowCartSidebar(false)} />
-          <div className="cart-sidebar">
-            <div className="cart-sidebar-header">
-              <button className="btn-close-cart-sidebar" onClick={() => setShowCartSidebar(false)}>
+        <div className="cart-overlay" onClick={() => setShowCartSidebar(false)}>
+          <div className="cart-sidebar" onClick={(e) => e.stopPropagation()}>
+            <div className="cart-header">
+              <h2>Sacola</h2>
+              <button className="close-cart" onClick={() => setShowCartSidebar(false)} aria-label="Fechar sacola">
                 <X size={24} />
               </button>
-              <div className="cart-header-info">
-                <div className="cart-address">
-                  <span>
-                    {state.selectedAddress
-                      ? `${state.selectedAddress.street}, ${state.selectedAddress.number}`
-                      : "Endereço não selecionado"}
-                  </span>
-                </div>
-                <div className="cart-total-badge">
-                  <span>
-                    R$ {state.cart.total.toFixed(2).replace(".", ",")} {state.cart.items.length}{" "}
-                    {state.cart.items.length === 1 ? "item" : "itens"}
-                  </span>
-                </div>
-              </div>
             </div>
 
-            <div className="cart-sidebar-content">
-              <div className="cart-order-info">
-                <h3>Seu pedido em</h3>
-                <div className="cart-restaurant-info">
-                  <h2>{restauranteData.nome_restaurante}</h2>
-                  <button className="btn-ver-cardapio">Ver Cardápio</button>
-                </div>
-              </div>
-
-              <div className="cart-suggestions">
-                <h3>Sugestões do Chef</h3>
-              </div>
-
-              <div className="cart-items">
-                {state.cart.items.map((item, index) => (
-                  <div key={`${item.id}-${index}`} className="cart-item">
-                    <div className="cart-item-info">
-                      <div className="cart-item-header">
-                        <span className="cart-item-quantity">{item.quantity}x</span>
-                        <span className="cart-item-name">{item.name}</span>
-                        <span className="cart-item-price">{formatarPreco(item.price * item.quantity)}</span>
-                      </div>
-                      <div className="cart-item-details">
-                        <span>1x Bem passado, 1x Enviar ketchup e mostarda sachê</span>
-                      </div>
-                      <div className="cart-item-badge">
-                        <span>🏷️ Item promocional</span>
-                      </div>
-                      <div className="cart-item-actions">
-                        <button className="btn-edit-item">Editar</button>
-                        <button className="btn-remove-item" onClick={() => actions.removeFromCart(item.id)}>
-                          Remover
-                        </button>
+            <div className="cart-content">
+              {state.cart.items.length > 0 ? (
+                <>
+                  {state.cart.restaurant && (
+                    <div className="cart-restaurant">
+                      <div className="restaurant-info">
+                        <h3>{state.cart.restaurant}</h3>
+                        <p>Entrega em 30-45 min</p>
                       </div>
                     </div>
+                  )}
+
+                  <div className="cart-items-list">
+                    {state.cart.items.map((item, index) => (
+                      <div key={`${item.id}-${index}`} className="cart-item">
+                        <div className="cart-item-image">
+                          <img
+                            src={item.image || "/placeholder.svg?height=60&width=60"}
+                            alt={item.name}
+                            onError={(e) => {
+                              e.target.src = "/placeholder.svg?height=60&width=60"
+                            }}
+                          />
+                        </div>
+                        <div className="cart-item-details">
+                          <h4>{item.name}</h4>
+                          <div className="cart-item-price">
+                            {formatarPreco(
+                              typeof item.price === "string"
+                                ? Number.parseFloat(item.price.replace("R$ ", "").replace(",", ".")) * item.quantity
+                                : Number.parseFloat(item.price) * item.quantity,
+                            )}
+                          </div>
+
+                          <div className="cart-item-actions">
+                            <button
+                              type="button"
+                              className="remove-item"
+                              onClick={() => actions.removeFromCart(item.id)}
+                              aria-label={`Remover ${item.name} do carrinho`}
+                            >
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M3 6H5H21"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+
+                            <div className="quantity-controls">
+                              <button
+                                type="button"
+                                className="quantity-btn decrease"
+                                onClick={() => actions.updateCartItem(item.id, item.quantity - 1)}
+                                disabled={item.quantity <= 1}
+                                aria-label="Diminuir quantidade"
+                              >
+                                <Minus size={16} />
+                              </button>
+                              <span className="quantity">{item.quantity}</span>
+                              <button
+                                type="button"
+                                className="quantity-btn increase"
+                                onClick={() => actions.updateCartItem(item.id, item.quantity + 1)}
+                                aria-label="Aumentar quantidade"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <div className="cart-coupon">
-                <div className="coupon-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M21 5H3C2.4 5 2 5.4 2 6V10C2 10.6 2.4 11 3 11H21C21.6 11 22 10.6 22 10V6C22 5.4 21.6 5 21 5Z"
-                      stroke="#717171"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M21 13H3C2.4 13 2 13.4 2 14V18C2 18.6 2.4 19 3 19H21C21.6 19 22 18.6 22 18V14C22 13.4 21.6 13 21 13Z"
-                      stroke="#717171"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                <div className="coupon-info">
-                  <h4>Cupom</h4>
-                  <p>2 cupons disponíveis</p>
-                </div>
-                <ChevronRight size={20} className="coupon-arrow" />
-              </div>
+                  <div className="cart-summary">
+                    <div className="summary-row">
+                      <span>Subtotal</span>
+                      <span>{formatarPreco(state.cart.total)}</span>
+                    </div>
+                    <div className="summary-row">
+                      <span>Taxa de entrega</span>
+                      <span>{formatarPreco(7.9)}</span>
+                    </div>
+                    <div className="summary-row total">
+                      <span>Total</span>
+                      <span>{formatarPreco(state.cart.total + 7.9)}</span>
+                    </div>
+                  </div>
 
-              <div className="cart-summary">
-                <div className="summary-row">
-                  <span>Subtotal</span>
-                  <span>R$ {state.cart.total.toFixed(2).replace(".", ",")}</span>
+                  <div className="cart-footer">
+                    <button type="button" className="checkout-button" onClick={irParaPagamento}>
+                      <span>Escolher forma de pagamento</span>
+                      <ArrowRight size={20} />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="empty-cart">
+                  <div className="empty-cart-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M6 2L3 6V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V6L18 2H6Z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M3 6H21"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M16 10C16 11.0609 15.5786 12.0783 14.8284 12.8284C14.0783 13.5786 13.0609 14 12 14C10.9391 14 9.92172 13.5786 9.17157 12.8284C8.42143 12.0783 8 11.0609 8 10"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <h3>Sua sacola está vazia</h3>
+                  <p>Adicione itens para continuar</p>
                 </div>
-                <div className="summary-row">
-                  <span>Taxa de entrega</span>
-                  <span className="free-delivery">Grátis</span>
-                </div>
-              </div>
-
-              <div className="cart-total">
-                <div className="total-row">
-                  <span>Total</span>
-                  <span>R$ {state.cart.total.toFixed(2).replace(".", ",")}</span>
-                </div>
-              </div>
-
-              <button className="btn-choose-payment" onClick={irParaPagamento}>
-                Escolher forma de pagamento
-              </button>
+              )}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Sidebar - Sobre o Restaurante */}
@@ -490,6 +533,8 @@ const RestaurantProfile = () => {
 }
 
 export default RestaurantProfile
+
+
 
 
 
