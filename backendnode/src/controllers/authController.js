@@ -87,6 +87,7 @@ exports.googleLogin = async (req, res) => {
 // Login local (email/senha)
 exports.loginLocal = async (req, res) => {
   try {
+    console.log("Login local chamado:", req.body)
     const { email, senha } = req.body
 
     if (!email || !senha) {

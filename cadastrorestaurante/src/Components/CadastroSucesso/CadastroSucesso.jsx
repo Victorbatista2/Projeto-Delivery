@@ -54,3 +54,4 @@ const CadastroSucesso = () => {
 }
 
 export default CadastroSucesso
+

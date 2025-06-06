@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useApp } from "../../contexts/AppContext"
@@ -160,14 +162,20 @@ const HomePage = ({ user, onLogout }) => {
   })
   const [showCart, setShowCart] = useState(false)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [mapError, setMapError] = useState(false)
+  const [map, setMap] = useState(null)
+  const [marker, setMarker] = useState(null)
+  const [autocomplete, setAutocomplete] = useState(null)
+  // Após os outros estados
+  const [addressSearchInput, setAddressSearchInput] = useState("")
 
   // Refs
   const searchRef = useRef(null)
   const categoriesContainerRef = useRef(null)
   const productsContainerRef = useRef(null)
+  const cartRef = useRef(null)
   const mapRef = useRef(null)
   const autocompleteInputRef = useRef(null)
-  const cartRef = useRef(null)
 
   // Memoized categories list
   const categories = useMemo(
@@ -199,6 +207,337 @@ const HomePage = ({ user, onLogout }) => {
       actions.loadRestaurants()
     }
   }, []) // Dependências vazias para executar apenas uma vez
+
+  // Estado para controlar o Google Maps
+  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false)
+  const [mapInstance, setMapInstance] = useState(null)
+  const [mapMarker, setMapMarker] = useState(null)
+  const [autocompleteInstance, setAutocompleteInstance] = useState(null)
+
+  // Função para carregar o Google Maps dinamicamente
+  const loadGoogleMapsScript = useCallback(() => {
+    return new Promise((resolve, reject) => {
+      // Se o Google Maps já está carregado, resolve imediatamente
+      if (window.google && window.google.maps) {
+        resolve(window.google)
+        return
+      }
+
+      // Se já existe um script carregando, aguarda
+      if (window.googleMapsLoading) {
+        const checkLoaded = setInterval(() => {
+          if (window.google && window.google.maps) {
+            clearInterval(checkLoaded)
+            resolve(window.google)
+          }
+        }, 100)
+        return
+      }
+
+      window.googleMapsLoading = true
+
+      // Função de callback global
+      window.initGoogleMaps = () => {
+        console.log("Google Maps carregado com sucesso!")
+        window.googleMapsLoading = false
+        resolve(window.google)
+      }
+
+      // Função de erro global
+      window.googleMapsError = () => {
+        console.error("Erro ao carregar Google Maps")
+        window.googleMapsLoading = false
+        reject(new Error("Erro ao carregar Google Maps"))
+      }
+
+      // Cria e adiciona o script
+      const script = document.createElement("script")
+      // Usando sua chave de API do Google Maps
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDdRLljL01LunT_X0eyE59DYtxdtav6oP0&libraries=places&callback=initGoogleMaps`
+      script.async = true
+      script.defer = true
+      script.onerror = window.googleMapsError
+
+      document.head.appendChild(script)
+    })
+  }, [])
+
+  // Initialize Google Maps
+  const initializeMap = useCallback(async () => {
+    if (!mapRef.current) {
+      console.log("mapRef não está disponível")
+      return
+    }
+
+    try {
+      console.log("Iniciando carregamento do Google Maps...")
+
+      // Carregar Google Maps
+      const google = await loadGoogleMapsScript()
+      console.log("Google Maps carregado, criando mapa...")
+
+      // Limpar conteúdo anterior do container
+      if (mapRef.current) {
+        mapRef.current.innerHTML = ""
+      }
+
+      // Criar o mapa centrado em São Paulo
+      const mapOptions = {
+        center: { lat: -23.5505, lng: -46.6333 }, // São Paulo
+        zoom: 12,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        zoomControl: true,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+      }
+
+      const newMap = new google.maps.Map(mapRef.current, mapOptions)
+      setMapInstance(newMap)
+
+      // Criar o autocomplete para o input
+      if (autocompleteInputRef.current) {
+        // Limpar qualquer autocomplete anterior
+        if (autocompleteInstance) {
+          google.maps.event.clearInstanceListeners(autocompleteInstance)
+        }
+
+        const newAutocomplete = new google.maps.places.Autocomplete(autocompleteInputRef.current, {
+          types: ["address"],
+          componentRestrictions: { country: "br" },
+          fields: ["address_components", "geometry", "formatted_address", "name"],
+        })
+
+        // Listener para quando um lugar é selecionado
+        newAutocomplete.addListener("place_changed", () => {
+          const place = newAutocomplete.getPlace()
+          console.log("Lugar selecionado:", place)
+
+          if (!place.geometry || !place.geometry.location) {
+            console.log("Nenhuma localização encontrada para o lugar selecionado")
+            return
+          }
+
+          // Atualizar o mapa
+          newMap.setCenter(place.geometry.location)
+          newMap.setZoom(17)
+
+          // Remover marcador anterior
+          if (mapMarker) {
+            mapMarker.setMap(null)
+          }
+
+          // Criar novo marcador
+          const newMarker = new google.maps.Marker({
+            position: place.geometry.location,
+            map: newMap,
+            title: place.formatted_address,
+            animation: google.maps.Animation.DROP,
+          })
+
+          setMapMarker(newMarker)
+
+          // Extrair componentes do endereço de forma mais robusta
+          let street = ""
+          let number = ""
+          let neighborhood = ""
+          let city = ""
+          let state = ""
+          let zipCode = ""
+
+          if (place.address_components) {
+            place.address_components.forEach((component) => {
+              const types = component.types
+
+              if (types.includes("street_number")) {
+                number = component.long_name
+              }
+              if (types.includes("route")) {
+                street = component.long_name
+              }
+              if (
+                types.includes("sublocality_level_1") ||
+                types.includes("sublocality") ||
+                types.includes("neighborhood")
+              ) {
+                neighborhood = component.long_name
+              }
+              if (types.includes("locality") || types.includes("administrative_area_level_2")) {
+                city = component.long_name
+              }
+              if (types.includes("administrative_area_level_1")) {
+                state = component.short_name
+              }
+              if (types.includes("postal_code")) {
+                zipCode = component.long_name
+              }
+            })
+          }
+
+          // Se não encontrou o número na estrutura, tentar extrair do nome ou endereço formatado
+          if (!number && place.name) {
+            const numberMatch = place.name.match(/\d+/)
+            if (numberMatch) {
+              number = numberMatch[0]
+            }
+          }
+
+          // Se ainda não tem número, tentar extrair do endereço formatado
+          if (!number && place.formatted_address) {
+            const numberMatch = place.formatted_address.match(/(\d+)/)
+            if (numberMatch) {
+              number = numberMatch[1]
+            }
+          }
+
+          // Formatar CEP se necessário
+          if (zipCode && zipCode.length === 8) {
+            zipCode = `${zipCode.slice(0, 5)}-${zipCode.slice(5)}`
+          }
+
+          // Atualizar o formulário com todos os dados
+          setNewAddress((prev) => ({
+            ...prev,
+            street: street || prev.street,
+            number: number || prev.number,
+            neighborhood: neighborhood || prev.neighborhood,
+            city: city || prev.city,
+            state: state || prev.state,
+            zipCode: zipCode || prev.zipCode,
+          }))
+
+          console.log("Endereço extraído:", {
+            street,
+            number,
+            neighborhood,
+            city,
+            state,
+            zipCode,
+            formatted_address: place.formatted_address,
+          })
+
+          // Se conseguiu extrair pelo menos rua e cidade, mostrar botão para continuar
+          if (street && city) {
+            console.log("Endereço completo encontrado, usuário pode continuar")
+          }
+        })
+
+        setAutocompleteInstance(newAutocomplete)
+      }
+
+      setGoogleMapsLoaded(true)
+      setMapError(false)
+      console.log("Google Maps inicializado com sucesso!")
+    } catch (error) {
+      console.error("Erro ao inicializar o mapa:", error)
+      setMapError(true)
+      setGoogleMapsLoaded(false)
+    }
+  }, [mapMarker, autocompleteInstance, addressSearchInput])
+
+  // Cleanup do Google Maps quando o modal fecha
+  const cleanupGoogleMaps = useCallback(() => {
+    if (autocompleteInstance) {
+      window.google?.maps?.event?.clearInstanceListeners(autocompleteInstance)
+      setAutocompleteInstance(null)
+    }
+
+    if (mapMarker) {
+      mapMarker.setMap(null)
+      setMapMarker(null)
+    }
+
+    if (mapInstance) {
+      // Não destruir a instância do mapa, apenas limpar
+      setMapInstance(null)
+    }
+
+    setGoogleMapsLoaded(false)
+
+    // Limpar o input do autocomplete
+    if (autocompleteInputRef.current) {
+      autocompleteInputRef.current.value = ""
+    }
+    setAddressSearchInput("")
+  }, [autocompleteInstance, mapMarker, mapInstance])
+
+  // Load Google Maps when modal opens
+  useEffect(() => {
+    if (showAddressModal && addressModalStep === 2 && !googleMapsLoaded && !mapError) {
+      // Pequeno delay para garantir que o DOM está pronto
+      const timer = setTimeout(() => {
+        initializeMap()
+      }, 100)
+
+      return () => clearTimeout(timer)
+    }
+  }, [showAddressModal, addressModalStep, googleMapsLoaded, mapError, initializeMap])
+
+  // Cleanup quando o modal fecha
+  useEffect(() => {
+    if (!showAddressModal) {
+      cleanupGoogleMaps()
+    }
+  }, [showAddressModal, cleanupGoogleMaps])
+
+  // Função para buscar endereço por CEP e atualizar o mapa
+  const searchCEPAndUpdateMap = useCallback(
+    async (cep) => {
+      try {
+        const cleanCEP = cep.replace(/\D/g, "")
+        if (cleanCEP.length !== 8) return
+
+        const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`)
+        const data = await response.json()
+
+        if (!data.erro) {
+          const fullAddress = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}, Brasil`
+
+          setNewAddress((prev) => ({
+            ...prev,
+            street: data.logradouro || prev.street,
+            neighborhood: data.bairro || prev.neighborhood,
+            city: data.localidade || prev.city,
+            state: data.uf || prev.state,
+            zipCode: `${cleanCEP.slice(0, 5)}-${cleanCEP.slice(5)}`,
+          }))
+
+          // Se o mapa estiver carregado, geocodificar e atualizar
+          if (googleMapsLoaded && mapInstance && window.google) {
+            const geocoder = new window.google.maps.Geocoder()
+
+            geocoder.geocode({ address: fullAddress }, (results, status) => {
+              if (status === "OK" && results[0]) {
+                const location = results[0].geometry.location
+
+                // Atualizar o mapa
+                mapInstance.setCenter(location)
+                mapInstance.setZoom(17)
+
+                // Remover marcador anterior
+                if (mapMarker) {
+                  mapMarker.setMap(null)
+                }
+
+                // Criar novo marcador
+                const newMarker = new window.google.maps.Marker({
+                  position: location,
+                  map: mapInstance,
+                  title: fullAddress,
+                  animation: window.google.maps.Animation.DROP,
+                })
+
+                setMapMarker(newMarker)
+              }
+            })
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao buscar CEP:", error)
+      }
+    },
+    [googleMapsLoaded, mapInstance, mapMarker],
+  )
 
   // Handle category click
   const handleCategoryClick = useCallback(
@@ -275,6 +614,47 @@ const HomePage = ({ user, onLogout }) => {
       label,
     }))
   }, [])
+
+  // CEP search function
+  const searchCEP = useCallback(async (cep) => {
+    try {
+      const cleanCEP = cep.replace(/\D/g, "")
+      if (cleanCEP.length !== 8) return
+
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`)
+      const data = await response.json()
+
+      if (!data.erro) {
+        setNewAddress((prev) => ({
+          ...prev,
+          street: data.logradouro || prev.street,
+          neighborhood: data.bairro || prev.neighborhood,
+          city: data.localidade || prev.city,
+          state: data.uf || prev.state,
+          zipCode: `${cleanCEP.slice(0, 5)}-${cleanCEP.slice(5)}`,
+        }))
+      }
+    } catch (error) {
+      console.error("Erro ao buscar CEP:", error)
+    }
+  }, [])
+
+  const handleCEPChange = useCallback(
+    (e) => {
+      const value = e.target.value.replace(/\D/g, "")
+      const formattedCEP = value.length > 5 ? `${value.slice(0, 5)}-${value.slice(5, 8)}` : value
+
+      setNewAddress((prev) => ({
+        ...prev,
+        zipCode: formattedCEP,
+      }))
+
+      if (value.length === 8) {
+        searchCEPAndUpdateMap(value)
+      }
+    },
+    [searchCEPAndUpdateMap],
+  )
 
   const saveNewAddress = useCallback(async () => {
     try {
@@ -381,6 +761,104 @@ const HomePage = ({ user, onLogout }) => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [showCart, showUserMenu])
+
+  // Adicione esta função junto com os outros callbacks
+  const searchAddressOnMap = useCallback(() => {
+    if (!addressSearchInput.trim() || !googleMapsLoaded || !mapInstance) return
+
+    const geocoder = new window.google.maps.Geocoder()
+
+    geocoder.geocode({ address: addressSearchInput + ", Brasil" }, (results, status) => {
+      if (status === "OK" && results[0]) {
+        const location = results[0].geometry.location
+
+        // Atualizar o mapa
+        mapInstance.setCenter(location)
+        mapInstance.setZoom(17)
+
+        // Remover marcador anterior
+        if (mapMarker) {
+          mapMarker.setMap(null)
+        }
+
+        // Criar novo marcador
+        const newMarker = new window.google.maps.Marker({
+          position: location,
+          map: mapInstance,
+          title: results[0].formatted_address,
+          animation: window.google.maps.Animation.DROP,
+        })
+
+        setMapMarker(newMarker)
+
+        // Extrair componentes do endereço
+        let street = ""
+        let number = ""
+        let neighborhood = ""
+        let city = ""
+        let state = ""
+        let zipCode = ""
+
+        if (results[0].address_components) {
+          results[0].address_components.forEach((component) => {
+            const types = component.types
+
+            if (types.includes("street_number")) {
+              number = component.long_name
+            }
+            if (types.includes("route")) {
+              street = component.long_name
+            }
+            if (
+              types.includes("sublocality_level_1") ||
+              types.includes("sublocality") ||
+              types.includes("neighborhood")
+            ) {
+              neighborhood = component.long_name
+            }
+            if (types.includes("locality") || types.includes("administrative_area_level_2")) {
+              city = component.long_name
+            }
+            if (types.includes("administrative_area_level_1")) {
+              state = component.short_name
+            }
+            if (types.includes("postal_code")) {
+              zipCode = component.long_name
+            }
+          })
+        }
+
+        // Se não encontrou o número na estrutura, tentar extrair do endereço formatado
+        if (!number && results[0].formatted_address) {
+          const numberMatch = results[0].formatted_address.match(/(\d+)/)
+          if (numberMatch) {
+            number = numberMatch[1]
+          }
+        }
+
+        // Formatar CEP se necessário
+        if (zipCode && zipCode.length === 8) {
+          zipCode = `${zipCode.slice(0, 5)}-${zipCode.slice(5)}`
+        }
+
+        // Atualizar o formulário
+        setNewAddress((prev) => ({
+          ...prev,
+          street: street || prev.street,
+          number: number || prev.number,
+          neighborhood: neighborhood || prev.neighborhood,
+          city: city || prev.city,
+          state: state || prev.state,
+          zipCode: zipCode || prev.zipCode,
+        }))
+
+        console.log("Endereço encontrado:", results[0].formatted_address)
+      } else {
+        console.error("Geocode não foi bem-sucedido pelo seguinte motivo: " + status)
+        alert("Não foi possível encontrar o endereço. Por favor, verifique e tente novamente.")
+      }
+    })
+  }, [addressSearchInput, googleMapsLoaded, mapInstance, mapMarker])
 
   return (
     <div className="home-container">
@@ -902,32 +1380,190 @@ const HomePage = ({ user, onLogout }) => {
             {addressModalStep === 2 && (
               <div className="modal-content">
                 <div className="address-search-container">
-                  <div className="address-search-input">
-                    <MapPin size={20} className="address-search-icon" />
-                    <input
-                      type="text"
-                      placeholder="Digite seu endereço"
-                      value={addressSearchQuery}
-                      onChange={(e) => setAddressSearchQuery(e.target.value)}
-                      ref={autocompleteInputRef}
-                    />
+                  {/* Google Maps Section */}
+                  <div className="search-by-maps">
+                    <h3>Buscar no mapa</h3>
+                    <div className="maps-input-group" style={{ display: "flex", gap: "8px" }}>
+                      <input
+                        type="text"
+                        placeholder="Digite o endereço completo"
+                        value={addressSearchInput}
+                        onChange={(e) => setAddressSearchInput(e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: "12px",
+                          border: "1px solid #ddd",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          marginBottom: "16px",
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            searchAddressOnMap()
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={searchAddressOnMap}
+                        style={{
+                          padding: "12px 16px",
+                          backgroundColor: "#ea1d2c",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        Buscar no mapa
+                      </button>
+                    </div>
+
+                    {/* Google Map */}
+                    <div
+                      ref={mapRef}
+                      style={{
+                        height: "300px",
+                        width: "100%",
+                        borderRadius: "8px",
+                        border: "1px solid #ddd",
+                        position: "relative",
+                        marginBottom: "20px",
+                      }}
+                    >
+                      {!mapLoaded && !mapError && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(245, 245, 245, 0.9)",
+                            zIndex: 10,
+                          }}
+                        >
+                          <LoadingSpinner />
+                          <p style={{ marginTop: "16px", color: "#666" }}>Carregando mapa...</p>
+                        </div>
+                      )}
+
+                      {mapError && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(245, 245, 245, 0.9)",
+                            zIndex: 10,
+                            padding: "20px",
+                            textAlign: "center",
+                          }}
+                        >
+                          <MapPin size={48} color="#ea1d2c" />
+                          <p style={{ marginTop: "16px", color: "#666" }}>
+                            Não foi possível carregar o mapa. Por favor, use a busca por CEP ou preencha o endereço
+                            manualmente.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="address-map-container" ref={mapRef}>
-                    {/* Google Map will be rendered here */}
+                  {/* CEP Search Section */}
+                  <div className="search-by-cep">
+                    <h3>Ou buscar por CEP</h3>
+                    <div className="cep-input-group">
+                      <input
+                        type="text"
+                        placeholder="Digite o CEP (ex: 01234-567)"
+                        value={newAddress.zipCode}
+                        onChange={handleCEPChange}
+                        maxLength={9}
+                        style={{
+                          width: "100%",
+                          padding: "12px",
+                          border: "1px solid #ddd",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                        }}
+                      />
+                    </div>
+                    <p style={{ fontSize: "12px", color: "#666", marginTop: "8px" }}>
+                      Digite o CEP para preencher automaticamente o endereço
+                    </p>
+                  </div>
+
+                  <div className="address-manual-entry" style={{ marginTop: "20px" }}>
+                    <button
+                      type="button"
+                      className="manual-entry-button"
+                      onClick={() => setAddressModalStep(3)}
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        border: "1px solid #ea1d2c",
+                        backgroundColor: "transparent",
+                        color: "#ea1d2c",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Preencher endereço manualmente
+                    </button>
                   </div>
                 </div>
 
-                <div className="address-manual-entry">
-                  <button type="button" className="manual-entry-button" onClick={() => setAddressModalStep(3)}>
-                    Preencher endereço manualmente
-                  </button>
-                </div>
-
-                <div className="modal-actions">
-                  <button type="button" className="modal-back-button" onClick={() => setAddressModalStep(1)}>
+                <div className="modal-actions" style={{ marginTop: "20px", display: "flex", gap: "12px" }}>
+                  <button
+                    type="button"
+                    className="modal-back-button"
+                    onClick={() => setAddressModalStep(1)}
+                    style={{
+                      flex: 1,
+                      padding: "12px",
+                      border: "1px solid #ddd",
+                      backgroundColor: "white",
+                      color: "#666",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                    }}
+                  >
                     Voltar
                   </button>
+                  {newAddress.street && (
+                    <button
+                      type="button"
+                      onClick={() => setAddressModalStep(3)}
+                      style={{
+                        flex: 1,
+                        padding: "12px",
+                        backgroundColor: "#ea1d2c",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Continuar
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -955,6 +1591,21 @@ const HomePage = ({ user, onLogout }) => {
                         <Briefcase size={16} />
                         Trabalho
                       </button>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="zipCode">CEP</label>
+                      <input
+                        type="text"
+                        id="zipCode"
+                        name="zipCode"
+                        value={newAddress.zipCode}
+                        onChange={handleCEPChange}
+                        placeholder="00000-000"
+                        maxLength={9}
+                      />
                     </div>
                   </div>
 
@@ -1034,20 +1685,6 @@ const HomePage = ({ user, onLogout }) => {
                         value={newAddress.state}
                         onChange={handleAddressFormChange}
                         placeholder="Estado"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="zipCode">CEP</label>
-                      <input
-                        type="text"
-                        id="zipCode"
-                        name="zipCode"
-                        value={newAddress.zipCode}
-                        onChange={handleAddressFormChange}
-                        placeholder="00000-000"
                       />
                     </div>
                   </div>

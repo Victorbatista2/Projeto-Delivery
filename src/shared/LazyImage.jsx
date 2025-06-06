@@ -58,3 +58,4 @@ const LazyImage = ({ src, alt, className = "", placeholder = "/placeholder.svg?h
 }
 
 export default LazyImage
+

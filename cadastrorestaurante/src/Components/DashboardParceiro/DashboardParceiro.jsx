@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import CadastroProduto from "./CadastroProduto"
 import GerenciarCardapio from "./GerenciarCardapio"
+import EditarInformacoes from "./EditarInformacoes"
+import PerfilRestaurante from "./PerfilRestaurante"
 import "./DashboardParceiro.css"
 
 const DashboardParceiro = () => {
@@ -30,6 +32,13 @@ const DashboardParceiro = () => {
       navigate("/login")
     }
   }, [navigate])
+
+  // Recarregar produtos sempre que a aba ativa mudar
+  useEffect(() => {
+    if (restauranteData && (activeTab === "dashboard" || activeTab === "perfil")) {
+      carregarProdutos(restauranteData.id)
+    }
+  }, [activeTab, restauranteData])
 
   const carregarProdutos = async (restauranteId) => {
     try {
@@ -64,6 +73,19 @@ const DashboardParceiro = () => {
     }
   }
 
+  const handleRestauranteAtualizado = (dadosAtualizados) => {
+    setRestauranteData(dadosAtualizados)
+    localStorage.setItem("restauranteData", JSON.stringify(dadosAtualizados))
+  }
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    // Recarregar produtos quando necessário
+    if ((tab === "dashboard" || tab === "perfil") && restauranteData) {
+      carregarProdutos(restauranteData.id)
+    }
+  }
+
   if (!restauranteData) {
     return <div className="loading">Carregando...</div>
   }
@@ -80,11 +102,11 @@ const DashboardParceiro = () => {
               </div>
               <div className="stat-card">
                 <h3>Produtos Disponíveis</h3>
-                <p className="stat-number">{produtos.filter((p) => p.disponivel).length}</p>
+                <p className="stat-number">{produtos.filter((p) => p.ativo).length}</p>
               </div>
               <div className="stat-card">
                 <h3>Categorias</h3>
-                <p className="stat-number">{new Set(produtos.map((p) => p.categoria_produto)).size}</p>
+                <p className="stat-number">{new Set(produtos.map((p) => p.categoria_nome).filter(Boolean)).size}</p>
               </div>
               <div className="stat-card">
                 <h3>Status</h3>
@@ -99,14 +121,14 @@ const DashboardParceiro = () => {
               ) : produtos.length > 0 ? (
                 <div className="products-list">
                   {produtos.slice(0, 5).map((produto) => (
-                    <div key={produto.id} className="product-item">
+                    <div key={produto.id_produto} className="product-item">
                       <div className="product-info">
-                        <h4>{produto.nome_produto}</h4>
-                        <p>{produto.categoria_produto}</p>
+                        <h4>{produto.nome}</h4>
+                        <p>{produto.categoria_nome || "Sem categoria"}</p>
                         <span className="price">R$ {Number.parseFloat(produto.preco).toFixed(2)}</span>
                       </div>
-                      <div className={`status ${produto.disponivel ? "available" : "unavailable"}`}>
-                        {produto.disponivel ? "Disponível" : "Indisponível"}
+                      <div className={`status ${produto.ativo ? "available" : "unavailable"}`}>
+                        {produto.ativo ? "Disponível" : "Indisponível"}
                       </div>
                     </div>
                   ))}
@@ -128,6 +150,14 @@ const DashboardParceiro = () => {
             produtos={produtos}
             onProdutoAtualizado={handleProdutoAtualizado}
           />
+        )
+
+      case "perfil":
+        return <PerfilRestaurante restauranteData={restauranteData} produtos={produtos} loading={loading} />
+
+      case "informacoes":
+        return (
+          <EditarInformacoes restauranteData={restauranteData} onRestauranteAtualizado={handleRestauranteAtualizado} />
         )
 
       default:
@@ -163,7 +193,7 @@ const DashboardParceiro = () => {
             <li>
               <button
                 className={`nav-item ${activeTab === "dashboard" ? "active" : ""}`}
-                onClick={() => setActiveTab("dashboard")}
+                onClick={() => handleTabChange("dashboard")}
               >
                 <span className="nav-icon">📊</span>
                 Dashboard
@@ -172,7 +202,7 @@ const DashboardParceiro = () => {
             <li>
               <button
                 className={`nav-item ${activeTab === "produtos" ? "active" : ""}`}
-                onClick={() => setActiveTab("produtos")}
+                onClick={() => handleTabChange("produtos")}
               >
                 <span className="nav-icon">➕</span>
                 Cadastrar Produto
@@ -181,10 +211,28 @@ const DashboardParceiro = () => {
             <li>
               <button
                 className={`nav-item ${activeTab === "cardapio" ? "active" : ""}`}
-                onClick={() => setActiveTab("cardapio")}
+                onClick={() => handleTabChange("cardapio")}
               >
                 <span className="nav-icon">📋</span>
                 Gerenciar Cardápio
+              </button>
+            </li>
+            <li>
+              <button
+                className={`nav-item ${activeTab === "perfil" ? "active" : ""}`}
+                onClick={() => handleTabChange("perfil")}
+              >
+                <span className="nav-icon">👤</span>
+                Perfil
+              </button>
+            </li>
+            <li>
+              <button
+                className={`nav-item ${activeTab === "informacoes" ? "active" : ""}`}
+                onClick={() => handleTabChange("informacoes")}
+              >
+                <span className="nav-icon">⚙️</span>
+                Editar Informações
               </button>
             </li>
           </ul>
@@ -197,3 +245,5 @@ const DashboardParceiro = () => {
 }
 
 export default DashboardParceiro
+
+

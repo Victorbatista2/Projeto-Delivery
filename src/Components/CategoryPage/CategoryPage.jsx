@@ -74,6 +74,11 @@ const CategoryPage = () => {
     navigate(-1)
   }
 
+  // Navegar para o perfil do restaurante
+  const handleRestaurantClick = (restaurant) => {
+    navigate(`/restaurante/${restaurant.id}`)
+  }
+
   return (
     <div className="category-page">
       <header className="category-header">
@@ -165,9 +170,22 @@ const CategoryPage = () => {
             </div>
           ) : restaurants.length > 0 ? (
             restaurants.map((restaurant) => (
-              <div key={restaurant.id} className="restaurant-item">
+              <div
+                key={restaurant.id}
+                className="restaurant-item"
+                onClick={() => handleRestaurantClick(restaurant)}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="restaurant-logo">
-                  <LazyImage src={restaurant.image || "/placeholder.svg?height=100&width=100"} alt={restaurant.name} />
+                  <LazyImage
+                    src={
+                      restaurant.image ||
+                      restaurant.imagem ||
+                      restaurant.imagem_url ||
+                      "/placeholder.svg?height=100&width=100"
+                    }
+                    alt={restaurant.name}
+                  />
                   {restaurant.featured && <div className="featured-badge"></div>}
                 </div>
                 <div className="restaurant-info">
@@ -218,4 +236,8 @@ const CategoryPage = () => {
 }
 
 export default CategoryPage
+
+
+
+
 

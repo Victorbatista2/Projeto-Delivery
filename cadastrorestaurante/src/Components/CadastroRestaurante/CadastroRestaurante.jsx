@@ -831,10 +831,3 @@ const CadastroRestaurante = () => {
 }
 
 export default CadastroRestaurante
-
-
-
-
-
-
-
