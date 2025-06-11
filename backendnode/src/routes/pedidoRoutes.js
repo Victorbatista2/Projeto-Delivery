@@ -7,6 +7,9 @@ router.use((req, res, next) => {
   next()
 })
 
+// Rota para listar pedidos de um usuário
+router.get("/usuario/:usuarioId", pedidoController.listarPedidosUsuario)
+
 // Rota para listar pedidos pendentes de um restaurante
 router.get("/restaurante/:restauranteId/pendentes", pedidoController.listarPendentesRestaurante)
 
@@ -32,6 +35,7 @@ router.post("/", pedidoController.criarPedido)
 router.get("/:pedidoId", pedidoController.buscarPorId)
 
 console.log("Rotas de pedidos carregadas:")
+console.log("GET /api/pedidos/usuario/:usuarioId")
 console.log("GET /api/pedidos/restaurante/:restauranteId/pendentes")
 console.log("GET /api/pedidos/:pedidoId")
 console.log("PUT /api/pedidos/:pedidoId/aceitar")
@@ -42,6 +46,7 @@ console.log("PUT /api/pedidos/:pedidoId/finalizar")
 console.log("POST /api/pedidos")
 
 module.exports = router
+
 
 
 

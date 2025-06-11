@@ -6,7 +6,7 @@
 }
 
 .category-page {
-  width: 100%;
+  width: 100vw;
   min-height: 100vh;
   background-color: #f7f7f7;
   font-family: "Nunito", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -16,7 +16,7 @@
 .category-header {
   background-color: #ffffff;
   height: 60px;
-  width: 100%;
+  width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -31,7 +31,6 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  max-width: 1200px;
   padding: 0 16px;
   height: 100%;
 }
@@ -105,9 +104,9 @@
 
 /* Conteúdo da página */
 .category-content {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 20px 16px;
+  padding: 20px 24px;
 }
 
 /* Barra de pesquisa */
@@ -198,7 +197,7 @@
 .restaurants-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .restaurant-item {
@@ -207,7 +206,7 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 16px;
+  padding: 12px;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -218,11 +217,11 @@
 }
 
 .restaurant-logo {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border-radius: 8px;
   overflow: hidden;
-  margin-right: 16px;
+  margin-right: 12px;
   position: relative;
 }
 
@@ -257,7 +256,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 12px;
   color: #717171;
 }
@@ -292,7 +291,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 14px;
   color: #3e3e3e;
 }
@@ -363,6 +362,11 @@
     width: 60px;
     height: 60px;
   }
+
+  .category-content {
+    max-width: 95%;
+    padding: 20px 16px;
+  }
 }
 
 @media screen and (max-width: 480px) {
@@ -382,6 +386,11 @@
   .restaurant-details,
   .restaurant-delivery {
     font-size: 12px;
+  }
+
+  .category-content {
+    max-width: 100%;
+    padding: 20px 12px;
   }
 }
 

@@ -1,5 +1,35 @@
 const db = require("../config/db.js")
 
+// Listar todos os pedidos de um usuário
+async function listarPorUsuario(usuarioId) {
+  const sql = `
+    SELECT 
+      p.*,
+      r.nome_restaurante as restaurante_nome,
+      r.logo_url as restaurante_logo,
+      COALESCE(
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'produto_nome', pr.nome,
+            'quantidade', ip.quantidade,
+            'preco_unitario', ip.preco_unitario
+          )
+        ) FILTER (WHERE ip.id_item_pedido IS NOT NULL), 
+        '[]'
+      ) as itens
+    FROM pedido p
+    LEFT JOIN restaurante r ON p.id_restaurante = r.id
+    LEFT JOIN itens_pedido ip ON p.id_pedido = ip.id_pedido
+    LEFT JOIN produto pr ON ip.id_produto = pr.id_produto
+    WHERE p.id_usuario = $1
+    GROUP BY p.id_pedido, r.nome_restaurante, r.logo_url
+    ORDER BY p.data_pedido DESC
+  `
+
+  const result = await db.query(sql, [usuarioId])
+  return result.rows
+}
+
 // Listar pedidos pendentes de um restaurante (últimos 5 minutos)
 async function listarPendentesRestaurante(restauranteId) {
   const sql = `
@@ -195,6 +225,7 @@ async function limparPedidosExpirados() {
 }
 
 module.exports = {
+  listarPorUsuario,
   listarPendentesRestaurante,
   buscarPorId,
   buscarComDetalhes,
@@ -203,6 +234,7 @@ module.exports = {
   limparPedidosExpirados,
   gerarCodigoConfirmacao,
 }
+
 
 
 

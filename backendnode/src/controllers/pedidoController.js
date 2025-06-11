@@ -30,6 +30,28 @@ const pedidoController = {
     }
   },
 
+  // Listar todos os pedidos de um usuário
+  listarPedidosUsuario: async (req, res) => {
+    try {
+      const { usuarioId } = req.params
+      console.log(`Buscando pedidos do usuário ${usuarioId}`)
+
+      const pedidos = await pedidoModel.listarPorUsuario(usuarioId)
+
+      res.json({
+        success: true,
+        data: pedidos,
+      })
+    } catch (error) {
+      console.error("Erro ao listar pedidos do usuário:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao buscar pedidos do usuário",
+        error: error.message,
+      })
+    }
+  },
+
   // Listar pedidos pendentes de um restaurante
   listarPendentesRestaurante: async (req, res) => {
     try {

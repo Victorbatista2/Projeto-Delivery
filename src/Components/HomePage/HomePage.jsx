@@ -91,12 +91,18 @@ const CategoryIcon = React.memo(({ category }) => {
 
 // Memoized restaurant card component
 const RestaurantCard = React.memo(({ restaurant }) => {
+  const navigate = useNavigate()
+
   const formatPrice = useCallback((price) => {
     return `R$ ${price.toFixed(2).replace(".", ",")}`
   }, [])
 
+  const handleCardClick = useCallback(() => {
+    navigate(`/restaurante/${restaurant.id}`)
+  }, [navigate, restaurant.id])
+
   return (
-    <div className="restaurant-card">
+    <div className="restaurant-card" onClick={handleCardClick} style={{ cursor: "pointer" }}>
       <div className="restaurant-card-image-container">
         <LazyImage src={restaurant.image} alt={restaurant.name} className="restaurant-card-image" />
         {restaurant.featured && <div className="featured-badge">Destaque</div>}
@@ -116,13 +122,7 @@ const RestaurantCard = React.memo(({ restaurant }) => {
             <Clock size={12} />
             {restaurant.deliveryTime}
           </span>
-          <span className="restaurant-card-fee">
-            {restaurant.deliveryFee === "Grátis" ? (
-              <span className="free-delivery-text">Grátis</span>
-            ) : (
-              restaurant.deliveryFee
-            )}
-          </span>
+          {restaurant.deliveryFee !== "Grátis" && <span className="restaurant-card-fee">{restaurant.deliveryFee}</span>}
         </div>
         {restaurant.coupon && (
           <div className="restaurant-card-coupon">
@@ -872,12 +872,16 @@ const HomePage = ({ user, onLogout }) => {
               className="logo-button"
               aria-label="Ir para página inicial"
             >
-              <svg viewBox="0 0 80 24" className="ifood-logo" aria-hidden="true">
-                <path
-                  d="M6.4 0h10.4v6.4H6.4V0zm0 9.6h10.4V16H6.4V9.6zm13.6-9.6H30v6.4H20V0zM0 0h3.2v22.4H0V0zm20 9.6h10.4V16H20V9.6zm-13.6 9.6h24v3.2h-24v-3.2zm30.4-19.2c-1.76 0-3.2 1.44-3.2 3.2v19.2h6.4V3.2c0-1.76-1.44-3.2-3.2-3.2zm7.2 0v22.4h6.4v-8h6.4v8h6.4V0h-6.4v8h-6.4V0h-6.4zm27.2 0c-1.76 0-3.2 1.44-3.2 3.2v19.2h6.4V3.2c0-1.76-1.44-3.2-3.2-3.2z"
-                  fill="#ea1d2c"
-                />
-              </svg>
+              <img
+                src="/Captura de tela 2025-06-11 013942.png"
+                alt="TO NA LAAARAS!!"
+                className="custom-logo"
+                style={{
+                  height: "40px",
+                  width: "auto",
+                  borderRadius: "8px",
+                }}
+              />
             </button>
           </div>
 
@@ -1102,6 +1106,32 @@ const HomePage = ({ user, onLogout }) => {
                       {user?.email}
                     </div>
                   </div>
+                  <button
+                    onClick={() => {
+                      navigate("/meus-pedidos")
+                      setShowUserMenu(false) // Fechar o menu após clicar
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      background: "none",
+                      border: "none",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "14px",
+                      color: "#3e3e3e",
+                      transition: "background-color 0.2s",
+                      borderBottom: "1px solid #f0f0f0",
+                    }}
+                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#f7f7f7")}
+                    onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
+                  >
+                    <ShoppingBag size={16} />
+                    Meus Pedidos
+                  </button>
                   <button
                     onClick={handleLogout}
                     style={{
@@ -1846,3 +1876,7 @@ const HomePage = ({ user, onLogout }) => {
 }
 
 export default HomePage
+
+
+
+

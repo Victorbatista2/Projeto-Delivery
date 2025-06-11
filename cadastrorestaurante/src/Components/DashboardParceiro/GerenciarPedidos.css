@@ -1,24 +1,36 @@
+.gerenciar-pedidos {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .pedidos-tabs {
   display: flex;
   margin-bottom: 20px;
   border-bottom: 2px solid #f0f0f0;
+  background: white;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .tab-button {
-  padding: 12px 20px;
-  background: none;
+  padding: 15px 25px;
+  background: #f8f9fa;
   border: none;
   cursor: pointer;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   color: #666;
   border-bottom: 3px solid transparent;
   transition: all 0.3s ease;
+  flex: 1;
+  text-align: center;
 }
 
 .tab-button:hover {
   color: #ea1d2c;
-  background-color: #f9f9f9;
+  background-color: #fff;
 }
 
 .tab-button.active {
@@ -31,37 +43,380 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e9ecef;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pedidos-header h2 {
+  color: #333;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.btn-refresh {
+  background: #ea1d2c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.btn-refresh:hover {
+  background: #d41625;
 }
 
 .pedidos-count-display {
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   text-align: center;
 }
 
 .pedidos-count-display .pedidos-count {
   background: #ea1d2c;
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(234, 29, 44, 0.3);
 }
 
 .pedidos-content {
   margin-top: 20px;
 }
 
+.pedidos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pedido-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pedido-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.pedido-card.expirando {
+  border-left: 4px solid #ff6b6b;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+}
+
 .pedido-card.finalizado {
-  opacity: 0.8;
+  opacity: 0.9;
   border-left: 4px solid #28a745;
+  background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);
+}
+
+.pedido-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f8f9fa;
+}
+
+.pedido-info h3 {
+  color: #333;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.cliente-nome {
+  color: #666;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 4px 0;
+}
+
+.pedido-data {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 4px 0;
 }
 
 .pedido-status {
   color: #666;
-  font-size: 14px;
-  margin-top: 5px;
+  font-size: 0.95rem;
+  margin: 8px 0;
+  font-weight: 500;
+  padding: 4px 12px;
+  background: #f8f9fa;
+  border-radius: 15px;
+  display: inline-block;
 }
+
+.pedido-timer {
+  text-align: center;
+  min-width: 80px;
+}
+
+.timer {
+  background: #28a745;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.timer.expirando {
+  background: #ff6b6b;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.timer-label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.pedido-detalhes {
+  margin: 20px 0;
+}
+
+.endereco-entrega,
+.itens-pedido,
+.pedido-pagamento {
+  margin-bottom: 20px;
+}
+
+.endereco-entrega h4,
+.itens-pedido h4 {
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  padding: 8px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.endereco-entrega p {
+  color: #555;
+  font-size: 1rem;
+  line-height: 1.4;
+  margin: 8px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.item-pedido {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.item-quantidade {
+  background: #ea1d2c;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 35px;
+  text-align: center;
+}
+
+.item-nome {
+  flex: 1;
+  margin: 0 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.item-preco {
+  font-weight: 600;
+  color: #28a745;
+  font-size: 1rem;
+}
+
+.pedido-pagamento {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.pagamento-info p {
+  margin: 4px 0;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.total-pedido {
+  text-align: right;
+}
+
+.total-pedido strong {
+  color: #28a745;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.pedido-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
+}
+
+.pedido-actions button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.btn-recusar {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-recusar:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.btn-aceitar {
+  background: #28a745;
+  color: white;
+}
+
+.btn-aceitar:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.btn-cancelar {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-cancelar:hover {
+  background: #e0a800;
+  transform: translateY(-1px);
+}
+
+.btn-saiu-entrega {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-saiu-entrega:hover {
+  background: #138496;
+  transform: translateY(-1px);
+}
+
+.pedido-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.no-pedidos {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.no-pedidos p {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .gerenciar-pedidos {
+    padding: 15px;
+  }
+
+  .pedido-card {
+    padding: 20px;
+  }
+
+  .pedido-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .pedido-timer {
+    align-self: flex-end;
+  }
+
+  .pedido-actions {
+    flex-direction: column;
+  }
+
+  .pedido-actions button {
+    width: 100%;
+  }
+
+  .pedido-pagamento {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .total-pedido {
+    text-align: left;
+  }
+}
+
 

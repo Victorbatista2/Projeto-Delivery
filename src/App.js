@@ -6,6 +6,8 @@ import LoadingSpinner from "./shared/LoadingSpinner"
 import NotificationSystem from "./shared/NotificationSystem"
 import "./App.css"
 
+
+
 // Lazy loading dos componentes
 const HomePage = React.lazy(() => import("./Components/HomePage/HomePage"))
 const CategoryPage = React.lazy(() => import("./Components/CategoryPage/CategoryPage"))
