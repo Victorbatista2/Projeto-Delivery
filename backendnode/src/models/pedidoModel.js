@@ -86,11 +86,21 @@ async function atualizarStatus(pedidoId, novoStatus) {
   })
 }
 
+// Gerar código de confirmação de 4 dígitos
+function gerarCodigoConfirmacao(pedidoId) {
+  let codigo
+  do {
+    codigo = Math.floor(1000 + Math.random() * 9000).toString()
+  } while (codigo === pedidoId.toString())
+
+  return codigo
+}
+
 // Criar novo pedido
 async function criar(pedidoData) {
   return db.transaction(async (client) => {
-    // Gerar código de entrega único
-    const codigoEntrega = Math.random().toString(36).substr(2, 8).toUpperCase()
+    // Gerar código de confirmação temporário (será substituído após obter o ID)
+    let codigoConfirmacao = Math.floor(1000 + Math.random() * 9000).toString()
 
     // Inserir pedido
     const sqlPedido = `
@@ -109,11 +119,23 @@ async function criar(pedidoData) {
       pedidoData.metodo_entrega,
       pedidoData.metodo_pagamento,
       pedidoData.troco_para || null,
-      codigoEntrega,
+      codigoConfirmacao,
     ]
 
     const resultPedido = await client.query(sqlPedido, valuesPedido)
     const pedido = resultPedido.rows[0]
+
+    // Verificar se o código é igual ao ID e gerar novo se necessário
+    if (codigoConfirmacao === pedido.id_pedido.toString()) {
+      do {
+        codigoConfirmacao = Math.floor(1000 + Math.random() * 9000).toString()
+      } while (codigoConfirmacao === pedido.id_pedido.toString())
+
+      // Atualizar com o novo código
+      const sqlUpdateCodigo = "UPDATE pedido SET codigo_entrega = $1 WHERE id_pedido = $2"
+      await client.query(sqlUpdateCodigo, [codigoConfirmacao, pedido.id_pedido])
+      pedido.codigo_entrega = codigoConfirmacao
+    }
 
     // Inserir itens do pedido
     if (pedidoData.itens && pedidoData.itens.length > 0) {
@@ -179,5 +201,8 @@ module.exports = {
   atualizarStatus,
   criar,
   limparPedidosExpirados,
+  gerarCodigoConfirmacao,
 }
+
+
 

@@ -19,6 +19,7 @@ import { useApp } from "../../contexts/AppContext"
 import PaymentMethodSelection from "../PaymentMethodSelection/PaymentMethodSelection"
 import CreditCardForm from "../CreditCardForm/CreditCardForm"
 import "./PaymentPage.css"
+import { useNavigate } from "react-router-dom"
 
 const PaymentPage = ({ cartProducts = [], cartTotal = 0, deliveryFee = 0, onBack }) => {
   const { state, actions } = useApp()
@@ -38,7 +39,7 @@ const PaymentPage = ({ cartProducts = [], cartTotal = 0, deliveryFee = 0, onBack
   const [restaurantData, setRestaurantData] = useState(null)
   const [selectedDeliveryPayment, setSelectedDeliveryPayment] = useState(null)
   const [selectedDeliveryOption, setSelectedDeliveryOption] = useState("standard")
-  const navigate = null // TODO: implement navigation
+  const navigate = useNavigate()
 
   // Delivery option prices
   const deliveryPrices = {
@@ -448,7 +449,7 @@ const PaymentPage = ({ cartProducts = [], cartTotal = 0, deliveryFee = 0, onBack
         actions.clearCart()
 
         // Redirecionar para tela de acompanhamento
-        // navigate(`/pedido/${result.data.id_pedido}`) // TODO: implement navigation
+        navigate(`/pedido/${result.data.id_pedido}`)
       } else {
         const error = await response.json()
         console.error("Erro ao criar pedido:", error)

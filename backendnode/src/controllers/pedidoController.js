@@ -144,6 +144,46 @@ const pedidoController = {
     }
   },
 
+  // Cancelar pedido
+  cancelarPedido: async (req, res) => {
+    try {
+      const { pedidoId } = req.params
+      const { restauranteId } = req.body
+
+      console.log(`Cancelando pedido ${pedidoId} do restaurante ${restauranteId}`)
+
+      // Verificar se o pedido existe e pertence ao restaurante
+      const pedido = await pedidoModel.buscarPorId(pedidoId)
+      if (!pedido) {
+        return res.status(404).json({
+          success: false,
+          message: "Pedido não encontrado",
+        })
+      }
+
+      if (pedido.id_restaurante !== Number.parseInt(restauranteId)) {
+        return res.status(403).json({
+          success: false,
+          message: "Pedido não pertence a este restaurante",
+        })
+      }
+
+      await pedidoModel.atualizarStatus(pedidoId, "Cancelado")
+
+      res.json({
+        success: true,
+        message: "Pedido cancelado com sucesso",
+      })
+    } catch (error) {
+      console.error("Erro ao cancelar pedido:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao cancelar pedido",
+        error: error.message,
+      })
+    }
+  },
+
   // Criar novo pedido
   criarPedido: async (req, res) => {
     try {
@@ -166,7 +206,89 @@ const pedidoController = {
       })
     }
   },
+
+  // Marcar pedido como saiu para entrega
+  saiuParaEntrega: async (req, res) => {
+    try {
+      const { pedidoId } = req.params
+      const { restauranteId } = req.body
+
+      console.log(`Marcando pedido ${pedidoId} como saiu para entrega`)
+
+      // Verificar se o pedido existe e pertence ao restaurante
+      const pedido = await pedidoModel.buscarPorId(pedidoId)
+      if (!pedido) {
+        return res.status(404).json({
+          success: false,
+          message: "Pedido não encontrado",
+        })
+      }
+
+      if (pedido.id_restaurante !== Number.parseInt(restauranteId)) {
+        return res.status(403).json({
+          success: false,
+          message: "Pedido não pertence a este restaurante",
+        })
+      }
+
+      await pedidoModel.atualizarStatus(pedidoId, "Saiu para Entrega")
+
+      res.json({
+        success: true,
+        message: "Pedido marcado como saiu para entrega",
+      })
+    } catch (error) {
+      console.error("Erro ao marcar pedido como saiu para entrega:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao marcar pedido",
+        error: error.message,
+      })
+    }
+  },
+
+  // Finalizar pedido (confirmar entrega)
+  finalizarPedido: async (req, res) => {
+    try {
+      const { pedidoId } = req.params
+      const { codigo_confirmacao } = req.body
+
+      console.log(`Finalizando pedido ${pedidoId} com código ${codigo_confirmacao}`)
+
+      // Verificar se o pedido existe
+      const pedido = await pedidoModel.buscarPorId(pedidoId)
+      if (!pedido) {
+        return res.status(404).json({
+          success: false,
+          message: "Pedido não encontrado",
+        })
+      }
+
+      // Verificar se o código de confirmação está correto
+      if (pedido.codigo_entrega !== codigo_confirmacao) {
+        return res.status(400).json({
+          success: false,
+          message: "Código de confirmação incorreto",
+        })
+      }
+
+      await pedidoModel.atualizarStatus(pedidoId, "Entregue")
+
+      res.json({
+        success: true,
+        message: "Pedido finalizado com sucesso",
+      })
+    } catch (error) {
+      console.error("Erro ao finalizar pedido:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao finalizar pedido",
+        error: error.message,
+      })
+    }
+  },
 }
 
 module.exports = pedidoController
+
 
