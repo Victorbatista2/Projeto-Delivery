@@ -1,5 +1,10 @@
+require("dotenv").config()
 const express = require("express")
 const cors = require("cors")
+
+const { closePool } = require("./config/db")
+
+// Importação única das rotas
 const authRoutes = require("./routes/authRoutes")
 const loginRoutes = require("./routes/routes_login")
 const restauranteRoutes = require("./routes/restauranteRoutes")
@@ -14,9 +19,10 @@ const PORT = process.env.PORT || 3001
 
 // Middlewares
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: "10mb" }))
+app.use(express.urlencoded({ limit: "10mb", extended: true }))
 
-// Debug middleware para todas as requisições
+// Log de requisições
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
   console.log("Body:", req.body)
@@ -24,29 +30,19 @@ app.use((req, res, next) => {
   next()
 })
 
-// Rotas
-app.use("/api", authRoutes)
-app.use("/api", loginRoutes)
+// Uso das rotas
+app.use("/api/auth", authRoutes)
+app.use("/api/login", loginRoutes)
 app.use("/api/restaurantes", restauranteRoutes)
 app.use("/api/produtos", produtoRoutes)
 app.use("/api/pagamento", pagamentoRoutes)
-app.use("/api/usuarios", enderecoRoutes)
+app.use("/api/usuarios", enderecoRoutes) // Endereços associados a usuários
 app.use("/api/metodos-pagamento", metodoPagamentoRoutes)
 app.use("/api/pedidos", pedidoRoutes)
 
 // Rota de teste
 app.get("/", (req, res) => {
-  res.json({ message: "API funcionando!" })
-})
-
-// Middleware de erro
-app.use((err, req, res, next) => {
-  console.error("Erro:", err)
-  res.status(500).json({
-    success: false,
-    message: "Erro interno do servidor",
-    error: err.message,
-  })
+  res.json({ message: "API do iFood Clone funcionando!" })
 })
 
 // Middleware para rotas não encontradas
@@ -58,11 +54,23 @@ app.use("*", (req, res) => {
   })
 })
 
-app.listen(PORT, () => {
+// Middleware de erro global
+app.use((err, req, res, next) => {
+  console.error("Erro:", err)
+  res.status(500).json({
+    success: false,
+    message: "Erro interno do servidor",
+    error: err.message,
+  })
+})
+
+// Início do servidor
+const server = app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`)
-  console.log("Rotas disponíveis:")
+  console.log(`API disponível em: http://localhost:${PORT}`)
+  console.log("Rotas registradas:")
   console.log("- POST /api/login")
-  console.log("- POST /api/register")
+  console.log("- POST /api/auth/register")
   console.log("- GET /api/restaurantes")
   console.log("- GET /api/produtos")
   console.log("- POST /api/pagamento")
@@ -80,9 +88,23 @@ app.listen(PORT, () => {
   console.log("- PUT /api/pedidos/:pedidoId/recusar")
 })
 
+// Graceful shutdown
+process.on("SIGTERM", async () => {
+  console.log("SIGTERM recebido, fechando servidor...")
+  server.close(async () => {
+    console.log("Servidor HTTP fechado.")
+    await closePool()
+    process.exit(0)
+  })
+})
 
+process.on("SIGINT", async () => {
+  console.log("SIGINT recebido, fechando servidor...")
+  server.close(async () => {
+    console.log("Servidor HTTP fechado.")
+    await closePool()
+    process.exit(0)
+  })
+})
 
-
-
-
-
+module.exports = app

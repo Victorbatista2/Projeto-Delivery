@@ -2,13 +2,13 @@ const router = require("express").Router()
 const authController = require("../controllers/authController")
 
 // Rota para login com Google
-router.post("/auth/google", authController.googleLogin)
+router.post("/google", authController.googleLogin)
 
-// Rota para login com Facebook
-router.post("/auth/facebook", authController.facebookLogin)
+// Rota para login local (email/senha)
+router.post("/login", authController.loginLocal)
+
+// Rota para verificar token JWT
+router.get("/verify", authController.verifyToken)
 
 module.exports = router
-
-
-
 

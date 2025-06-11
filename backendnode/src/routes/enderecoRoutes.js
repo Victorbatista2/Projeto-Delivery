@@ -15,6 +15,8 @@ router.put("/:usuarioId/enderecos/:enderecoId", enderecoController.atualizarEnde
 router.delete("/:usuarioId/enderecos/:enderecoId", enderecoController.excluirEndereco)
 router.patch("/:usuarioId/enderecos/:enderecoId/padrao", enderecoController.definirPadrao)
 
+
+
 console.log("Rotas de endereço carregadas:")
 console.log("GET /api/usuarios/:usuarioId/enderecos")
 console.log("GET /api/usuarios/:usuarioId/enderecos/:enderecoId")
