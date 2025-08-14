@@ -1,5 +1,3 @@
-"use client"
-
 import { createContext, useContext, useReducer, useEffect, useCallback } from "react"
 
 // Estado inicial

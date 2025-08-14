@@ -13,6 +13,12 @@ router.get("/usuario/:usuarioId", pedidoController.listarPedidosUsuario)
 // Rota para listar pedidos pendentes de um restaurante
 router.get("/restaurante/:restauranteId/pendentes", pedidoController.listarPendentesRestaurante)
 
+// Rota para listar pedidos aceitos de um restaurante
+router.get("/restaurante/:restauranteId/aceitos", pedidoController.listarAceitosRestaurante)
+
+// Rota para listar pedidos finalizados de um restaurante
+router.get("/restaurante/:restauranteId/finalizados", pedidoController.listarFinalizadosRestaurante)
+
 // Rota para aceitar pedido
 router.put("/:pedidoId/aceitar", pedidoController.aceitarPedido)
 
@@ -37,6 +43,8 @@ router.get("/:pedidoId", pedidoController.buscarPorId)
 console.log("Rotas de pedidos carregadas:")
 console.log("GET /api/pedidos/usuario/:usuarioId")
 console.log("GET /api/pedidos/restaurante/:restauranteId/pendentes")
+console.log("GET /api/pedidos/restaurante/:restauranteId/aceitos")
+console.log("GET /api/pedidos/restaurante/:restauranteId/finalizados")
 console.log("GET /api/pedidos/:pedidoId")
 console.log("PUT /api/pedidos/:pedidoId/aceitar")
 console.log("PUT /api/pedidos/:pedidoId/recusar")
@@ -46,6 +54,7 @@ console.log("PUT /api/pedidos/:pedidoId/finalizar")
 console.log("POST /api/pedidos")
 
 module.exports = router
+
 
 
 

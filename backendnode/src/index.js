@@ -42,7 +42,7 @@ app.use("/api/pedidos", pedidoRoutes)
 
 // Rota de teste
 app.get("/", (req, res) => {
-  res.json({ message: "API do iFood Clone funcionando!" })
+  res.json({ message: "API funcionando!" })
 })
 
 // Middleware para rotas não encontradas

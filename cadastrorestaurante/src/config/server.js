@@ -1,5 +1,5 @@
 const express = require("express");
-const { connect } = require("backendnode/src/config/db.js"); // Substitua pelo caminho do seu arquivo
+const { connect } = require("backendnode/src/config/db.js"); 
 const bodyParser = require("body-parser");
 const cors = require("cors");
 

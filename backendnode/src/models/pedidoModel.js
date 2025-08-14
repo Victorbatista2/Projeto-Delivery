@@ -224,9 +224,74 @@ async function limparPedidosExpirados() {
   })
 }
 
+// Listar pedidos aceitos/confirmados de um restaurante
+async function listarAceitosRestaurante(restauranteId) {
+  const sql = `
+    SELECT 
+      p.*,
+      u.nome as usuario_nome,
+      u.telefone as usuario_telefone,
+      COALESCE(
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'produto_nome', pr.nome,
+            'quantidade', ip.quantidade,
+            'preco_unitario', ip.preco_unitario
+          )
+        ) FILTER (WHERE ip.id_item_pedido IS NOT NULL), 
+        '[]'
+      ) as itens
+    FROM pedido p
+    LEFT JOIN usuario u ON p.id_usuario = u.id
+    LEFT JOIN itens_pedido ip ON p.id_pedido = ip.id_pedido
+    LEFT JOIN produto pr ON ip.id_produto = pr.id_produto
+    WHERE p.id_restaurante = $1 
+      AND p.status IN ('Confirmado', 'Preparando', 'Pronto')
+    GROUP BY p.id_pedido, u.nome, u.telefone
+    ORDER BY p.data_pedido DESC
+  `
+
+  const result = await db.query(sql, [restauranteId])
+  return result.rows
+}
+
+// Listar pedidos finalizados de um restaurante
+async function listarFinalizadosRestaurante(restauranteId) {
+  const sql = `
+    SELECT 
+      p.*,
+      u.nome as usuario_nome,
+      u.telefone as usuario_telefone,
+      COALESCE(
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'produto_nome', pr.nome,
+            'quantidade', ip.quantidade,
+            'preco_unitario', ip.preco_unitario
+          )
+        ) FILTER (WHERE ip.id_item_pedido IS NOT NULL), 
+        '[]'
+      ) as itens
+    FROM pedido p
+    LEFT JOIN usuario u ON p.id_usuario = u.id
+    LEFT JOIN itens_pedido ip ON p.id_pedido = ip.id_pedido
+    LEFT JOIN produto pr ON ip.id_produto = pr.id_produto
+    WHERE p.id_restaurante = $1 
+      AND p.status IN ('Entregue', 'Saiu para Entrega', 'Cancelado', 'Recusado', 'Não Aceito')
+    GROUP BY p.id_pedido, u.nome, u.telefone
+    ORDER BY p.data_pedido DESC
+    LIMIT 50
+  `
+
+  const result = await db.query(sql, [restauranteId])
+  return result.rows
+}
+
 module.exports = {
   listarPorUsuario,
   listarPendentesRestaurante,
+  listarAceitosRestaurante,
+  listarFinalizadosRestaurante,
   buscarPorId,
   buscarComDetalhes,
   atualizarStatus,
@@ -234,6 +299,7 @@ module.exports = {
   limparPedidosExpirados,
   gerarCodigoConfirmacao,
 }
+
 
 
 

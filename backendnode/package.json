@@ -1,7 +1,7 @@
 {
-  "name": "ifood-clone-backend",
+  "name": "backend-projeto-platarforma-de-delivery",
   "version": "1.0.0",
-  "description": "Backend para clone do iFood",
+  "description": "Backend do plojeto",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

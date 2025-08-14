@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useApp } from "../../contexts/AppContext"
 import LoadingSpinner from "../../shared/LoadingSpinner"

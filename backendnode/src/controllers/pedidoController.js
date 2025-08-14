@@ -51,7 +51,7 @@ const pedidoController = {
       })
     }
   },
-
+  
   // Listar pedidos pendentes de um restaurante
   listarPendentesRestaurante: async (req, res) => {
     try {
@@ -309,8 +309,53 @@ const pedidoController = {
       })
     }
   },
+
+  // Listar pedidos aceitos de um restaurante
+  listarAceitosRestaurante: async (req, res) => {
+    try {
+      const { restauranteId } = req.params
+      console.log(`Buscando pedidos aceitos para restaurante ${restauranteId}`)
+
+      const pedidos = await pedidoModel.listarAceitosRestaurante(restauranteId)
+
+      res.json({
+        success: true,
+        data: pedidos,
+      })
+    } catch (error) {
+      console.error("Erro ao listar pedidos aceitos:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao buscar pedidos aceitos",
+        error: error.message,
+      })
+    }
+  },
+
+  // Listar pedidos finalizados de um restaurante
+  listarFinalizadosRestaurante: async (req, res) => {
+    try {
+      const { restauranteId } = req.params
+      console.log(`Buscando pedidos finalizados para restaurante ${restauranteId}`)
+
+      const pedidos = await pedidoModel.listarFinalizadosRestaurante(restauranteId)
+
+      res.json({
+        success: true,
+        data: pedidos,
+      })
+    } catch (error) {
+      console.error("Erro ao listar pedidos finalizados:", error)
+      res.status(500).json({
+        success: false,
+        message: "Erro ao buscar pedidos finalizados",
+        error: error.message,
+      })
+    }
+  },
 }
 
 module.exports = pedidoController
+
 
 

@@ -1,4 +1,3 @@
-"use client"
 import { useApp } from "../contexts/AppContext"
 import "./NotificationSystem.css"
 

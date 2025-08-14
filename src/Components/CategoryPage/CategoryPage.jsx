@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Search, ShoppingBag, Bell, ChevronDown, ChevronLeft, Filter, Star, Clock, Ticket } from "lucide-react"
