@@ -18,10 +18,11 @@ const LoginRegister = () => {
     loadFacebookSDK()
   }, [])
 
+  const FB_APP_ID = process.env.REACT_APP_FACEBOOK_APP_ID;
   const loadFacebookSDK = () => {
     window.fbAsyncInit = () => {
       window.FB.init({
-        appId: "2406762519701766",
+        appId: FB_APP_ID,
         cookie: true,
         xfbml: true,
         version: "v17.0",
@@ -156,8 +157,9 @@ const LoginRegister = () => {
     }
   }
 
+  const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID
   return (
-    <GoogleOAuthProvider clientId="474311907571-g0d6vjrjgatf3d0b7do9fq6cm9u5par1.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={googleClientId}>
       <div className="container">
         <div className="header">
           <div className="text">{formState}</div>

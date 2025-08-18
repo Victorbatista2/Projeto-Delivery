@@ -250,8 +250,9 @@ const HomePage = ({ user, onLogout }) => {
 
       // Cria e adiciona o script
       const script = document.createElement("script")
+      const mapsKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY
       // Usando sua chave de API do Google Maps
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDdRLljL01LunT_X0eyE59DYtxdtav6oP0&libraries=places&callback=initGoogleMaps`
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${mapsKey}&libraries=places&callback=initGoogleMaps`
       script.async = true
       script.defer = true
       script.onerror = window.googleMapsError
